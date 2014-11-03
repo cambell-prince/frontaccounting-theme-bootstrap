@@ -4,7 +4,7 @@
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "0c1050d50378bd93d7284be7f54bf0ad",
+    "hash": "b5457dc559787736246d9b3d120b093d",
     "packages": [
         {
             "name": "twig/twig",

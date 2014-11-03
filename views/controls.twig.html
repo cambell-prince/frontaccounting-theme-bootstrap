@@ -1,0 +1,36 @@
+{% block form %}
+	{% if multi %}
+	<form role="form" enctype='multipart/form-data' method='post' action='{{ action }}' {{ name }}>
+	{% else %}
+	<form role="form" method='post' action='{{action}}' {{ name }}>
+	{% endif %}
+{% endblock form %}
+
+{% block form_end %}
+</form>
+{% endblock form_end %}
+
+{% block table %}
+<center><table class="{{ class }}" {{ extra }} cellpadding="{{padding}}" cellspacing=""{{spacing}}>
+{% endblock table %}
+
+{% block table_end %}
+</table></center>
+{% endblock table_end %}
+
+
+
+{% block tabs %}
+<ul class="ajaxtabs nav nav-tabs" role="tablist" rel="{{ divID }}">
+	{% for tab in tabs %}
+	<li role="presentation" {% if tab.isActive %} class="active" {% endif%}><button type="submit" name="{{ tab.name }}" {{ tab.accessKey}} {{ tab.disabled }}>{{ tab.text | raw }}</button></li>
+	{% endfor %}
+</ul>
+<div class="spaceBox"></div>
+<input type="hidden" name="{{ selName }}" value="{{ sel }}">
+<div class="contentBox" id="divID">
+{% endblock tabs %}
+
+{% block tabs_end %}
+</div>
+{% endblock tabs_end %}

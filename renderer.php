@@ -1,5 +1,6 @@
 <?php
 
+use FA\Theme\Bootstrap\ThemeBootstrap;
 /**********************************************************************
     Copyright (C) FrontAccounting, LLC.
 	Released under the terms of the GNU General Public License, GPL,
@@ -10,6 +11,9 @@
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
     See the License here <http://www.gnu.org/licenses/gpl-3.0.html>.
 ***********************************************************************/
+
+require_once (__DIR__ . '/theme.php');
+
 class renderer
 {
 
@@ -37,30 +41,28 @@ class renderer
 	function menu_header($title, $no_menu, $is_index)
 	{
 		global $path_to_root, $help_base_url, $db_connections;
-		echo "<table class='callout_main' border='0' cellpadding='0' cellspacing='0'>\n";
-		echo "<tr>\n";
-		echo "<td colspan='2' rowspan='2'>\n";
-
-		echo "<table class='main_page' border='0' cellpadding='0' cellspacing='0'>\n";
-		echo "<tr>\n";
-		echo "<td>\n";
-		echo "<table width='100%' border='0' cellpadding='0' cellspacing='0'>\n";
-		echo "<tr>\n";
-		echo "<td class='quick_menu'>\n"; // tabs
 		if (! $no_menu) {
-			$applications = $_SESSION['App']->applications;
+			$context = array();
+			$context['theme_path'] = ThemeBootstrap::THEME_PATH;
+			$context['selected_application'] = $_SESSION['sel_app'];
+			$context['applications'] = array();
 			$local_path_to_root = $path_to_root;
-			$sel_app = $_SESSION['sel_app'];
-			echo "<table cellpadding=0 cellspacing=0 width='100%'><tr><td>";
-			echo "<div class=tabs>";
+			$applications = $_SESSION['App']->applications;
 			foreach ($applications as $app) {
 				if ($_SESSION["wa_current_user"]->check_application_access($app)) {
 					$acc = access_string($app->name);
-					echo "<a class='" . ($sel_app == $app->id ? 'selected' : 'menu_tab') . "' href='$local_path_to_root/index.php?application=" . $app->id . "'$acc[1]>" . $acc[0] . "</a>";
+					$context['applications'][] = array(
+						'id' => $app->id,
+						'link' => $local_path_to_root . '/index.php?application=' . $app->id,
+						'name' => $acc[0],
+						'class' => ($app->id == $_SESSION['sel_app']) ? 'active' : '',
+						'accessKey' => $acc[1],
+					);
 				}
 			}
-			echo "</div>";
-			echo "</td></tr></table>";
+
+			$navbar = ThemeBootstrap::get()->render('nav.twig.html', $context);
+			echo $navbar;
 
 			// top status bar
 			$img = "<img src='$local_path_to_root/themes/default/images/login.gif' width='14' height='14' border='0' alt='" . _('Logout') . "'>&nbsp;&nbsp;";
@@ -79,15 +81,13 @@ class renderer
 			echo "</td></tr><tr><td colspan=3>";
 			echo "</td></tr></table>";
 		}
-		echo "</td></tr></table>";
-		echo 'BOO';
+// 		echo "</td></tr></table>";
 
-		if ($no_menu)
-			echo "<br>";
-		elseif ($title && ! $is_index) {
-			echo "<center><table id='title'><tr><td width='100%' class='titletext'>$title</td>" . "<td align=right>" . (user_hints() ? "<span id='hints'></span>" : '') . "</td>" . "</tr></table></center>";
-		}
-		echo 'HOO';
+// 		if ($no_menu)
+// 			echo "<br>";
+// 		elseif ($title && ! $is_index) {
+// 			echo "<center><table id='title'><tr><td width='100%' class='titletext'>$title</td>" . "<td align=right>" . (user_hints() ? "<span id='hints'></span>" : '') . "</td>" . "</tr></table></center>";
+// 		}
 	}
 
 	function menu_footer($no_menu, $is_index)

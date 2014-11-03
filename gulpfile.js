@@ -27,10 +27,8 @@ var execute = function(command, options, callback) {
 };
 
 var paths = {
-  src: ['less/*.less', '*.php', 'views/*.html', '!vendor/**'],
   less: ['less/*.less', '!vendor/**'],
-  reload: ['default.css', '!vendor/**'],
-  bootstrap: 'vendor/twbs/bootstrap/'
+  reload: ['default.css', '*.php', 'views/*.html', '!vendor/**']
 };
 
 // livereload

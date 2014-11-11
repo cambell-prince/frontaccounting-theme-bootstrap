@@ -2,3 +2,5 @@ node_modules/
 vendor/
 default.css
 cache/
+docs/
+trace*

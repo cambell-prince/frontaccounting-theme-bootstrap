@@ -5,7 +5,8 @@ var child_process = require('child_process');
 var exec2 = require('child_process').exec;
 var async = require('async');
 var template = require('lodash.template');
-var rename = require("gulp-rename");
+var rename = require('gulp-rename');
+var sourcemaps = require('gulp-sourcemaps');
 
 var execute = function(command, options, callback) {
   if (options == undefined) {
@@ -56,9 +57,11 @@ gulp.task('reload', function() {
 
 gulp.task('less', function () {
   gulp.src('./less/default.less')
+    .pipe(sourcemaps.init())
     .pipe(less({
       paths: [ 'less', 'vendor/twbs/bootstrap/less' ]
     }))
+    .pipe(sourcemaps.write())
     .pipe(gulp.dest('./'));
 });
 

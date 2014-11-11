@@ -3,21 +3,6 @@ namespace FA\Theme\Bootstrap;
 
 class InputRendererBootstrap extends \InputRenderer
 {
-	// ------------------------------------------------------------------------------
-	// Seek for _POST variable with $prefix.
-	// If var is found returns variable name with prefix stripped,
-	// and null or -1 otherwise.
-	//
-	function find_submit($prefix, $numeric = true)
-	{
-		foreach ($_POST as $postkey => $postval) {
-			if (strpos($postkey, $prefix) === 0) {
-				$id = substr($postkey, strlen($prefix));
-				return $numeric ? (int) $id : $id;
-			}
-		}
-		return $numeric ? - 1 : null;
-	}
 
 	// ------------------------------------------------------------------------------
 	//
@@ -85,7 +70,7 @@ class InputRendererBootstrap extends \InputRenderer
 		$ret = "<input type=\"hidden\" name=\"$name\" value=\"$value\">";
 		$Ajax->addUpdate($name, $name, $value);
 		if ($echo)
-			echo $ret . "\n";
+			View::get()->addControl(View::controlFromRenderedString(View::CONTROL_HIDDEN, '', $ret));
 		else
 			return $ret;
 	}
@@ -133,34 +118,26 @@ class InputRendererBootstrap extends \InputRenderer
 				}
 			}
 		}
-		$submit_str = "<button class=\"" . ($atype ? 'ajaxsubmit' : 'inputsubmit') . "\" type=\"submit\"" . $aspect . " name=\"$name\"  id=\"$name\" value=\"$value\"" . ($title ? " title='$title'" : '') . ">" . ($icon ? "<img src='$path_to_root/themes/" . user_theme() . "/images/$icon' height='12'>" : '') . "<span>$value</span>" . "</button>\n";
+		$submit_str = "<button class=\"btn " . ($atype ? 'ajaxsubmit' : 'inputsubmit') . "\" type=\"submit\"" . $aspect . " name=\"$name\"  id=\"$name\" value=\"$value\"" . ($title ? " title='$title'" : '') . ">" . ($icon ? "<img src='$path_to_root/themes/" . user_theme() . "/images/$icon' height='12'>" : '') . "<span>$value</span>" . "</button>\n";
 		if ($echo)
-			echo $submit_str;
+			View::get()->addControl(View::controlFromRenderedString(View::CONTROL_BUTTON, '', $submit_str));
 		else
 			return $submit_str;
 	}
 
 	function submit_center($name, $value, $echo = true, $title = false, $async = false, $icon = false)
 	{
-		if ($echo)
-			echo "<center>";
-		submit($name, $value, $echo, $title, $async, $icon);
-		if ($echo)
-			echo "</center>";
+		$this->submit($name, $value, $echo, $title, $async, $icon);
 	}
 
 	function submit_center_first($name, $value, $title = false, $async = false, $icon = false)
 	{
-		echo "<center>";
-		submit($name, $value, true, $title, $async, $icon);
-		echo "&nbsp;";
+		$this->submit($name, $value, true, $title, $async, $icon);
 	}
 
 	function submit_center_last($name, $value, $title = false, $async = false, $icon = false)
 	{
-		echo "&nbsp;";
-		submit($name, $value, true, $title, $async, $icon);
-		echo "</center>";
+		$this->submit($name, $value, true, $title, $async, $icon);
 	}
 	/*
 	 * For following controls: 'both' - use both Ctrl-Enter and Escape hotkeys 'cancel' - apply to 'RESET' button
@@ -189,42 +166,29 @@ class InputRendererBootstrap extends \InputRenderer
 
 	function submit_add_or_update_center($add = true, $title = false, $async = false, $clone = false)
 	{
-		echo "<center>";
-		submit_add_or_update($add, $title, $async, $clone);
-		echo "</center>";
+		$this->submit_add_or_update($add, $title, $async, $clone);
 	}
 
 	function submit_add_or_update_row($add = true, $right = true, $extra = "", $title = false, $async = false, $clone = false)
 	{
-		echo "<tr>";
-		if ($right)
-			echo "<td>&nbsp;</td>\n";
-		echo "<td $extra>";
-		submit_add_or_update($add, $title, $async, $clone);
-		echo "</td></tr>\n";
+		View::get()->layoutHintRow();
+// Probably need to make $right available to the view CP 2014-11
+// 		if ($right)
+// 			echo "<td>&nbsp;</td>\n";
+		$this->submit_add_or_update($add, $title, $async, $clone);
 	}
 
 	function submit_cells($name, $value, $extra = "", $title = false, $async = false)
 	{
-		echo "<td $extra>";
-		submit($name, $value, true, $title, $async);
-		echo "</td>\n";
+		$this->submit($name, $value, true, $title, $async);
 	}
 
 	function submit_row($name, $value, $right = true, $extra = "", $title = false, $async = false)
 	{
-		echo "<tr>";
-		if ($right)
-			echo "<td>&nbsp;</td>\n";
-		submit_cells($name, $value, $extra, $title, $async);
-		echo "</tr>\n";
-	}
-
-	function submit_return($name, $value, $title = false)
-	{
-		if (@$_REQUEST['popup']) {
-			submit($name, $value, true, $title, 'selector');
-		}
+		View::get()->layoutHintRow();
+// 		if ($right)
+// 			echo "<td>&nbsp;</td>\n";
+		$this->submit_cells($name, $value, $extra, $title, $async);
 	}
 
 	function submit_js_confirm($name, $msg, $set = true)
@@ -259,44 +223,36 @@ class InputRendererBootstrap extends \InputRenderer
 		if (user_graphic_links() && $icon) {
 			if ($value == _("Delete")) // Helper during implementation
 				$icon = ICON_DELETE;
-			return "<button type='submit' class='editbutton' name='" . htmlentities(strtr($name, array(
+			return "<button type='submit' class='btn editbutton' name='" . htmlentities(strtr($name, array(
 				'.' => '=2E',
 				'=' => '=3D' // ' '=>'=20','['=>'=5B'
-						))) . "' value='1'" . ($title ? " title='$title'" : " title='$value'") . ($aspect ? " aspect='$aspect'" : '') . $rel . " />" . set_icon($icon) . "</button>\n";
+			))) . "' value='1'" . ($title ? " title='$title'" : " title='$value'") . ($aspect ? " aspect='$aspect'" : '') . $rel . " />" . set_icon($icon) . "</button>\n";
 		} else
-			return "<input type='submit' class='editbutton' name='" . htmlentities(strtr($name, array(
+			return "<input type='submit' class='btn editbutton' name='" . htmlentities(strtr($name, array(
 				'.' => '=2E',
 				'=' => '=3D' // ' '=>'=20','['=>'=5B'
-						))) . "' value='$value'" . ($title ? " title='$title'" : '') . ($aspect ? " aspect='$aspect'" : '') . $rel . " />\n";
+			))) . "' value='$value'" . ($title ? " title='$title'" : '') . ($aspect ? " aspect='$aspect'" : '') . $rel . " />\n";
 	}
 
 	function button_cell($name, $value, $title = false, $icon = false, $aspect = '')
 	{
-		echo "<td align='center'>";
-		echo button($name, $value, $title, $icon, $aspect);
-		echo "</td>";
+		$controlAsString = button($name, $value, $title, $icon, $aspect);
+		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_BUTTON, $label, $controlAsString));
 	}
 
 	function delete_button_cell($name, $value, $title = false)
 	{
-		button_cell($name, $value, $title, ICON_DELETE);
+		$this->button_cell($name, $value, $title, ICON_DELETE);
 	}
 
 	function edit_button_cell($name, $value, $title = false)
 	{
-		button_cell($name, $value, $title, ICON_EDIT);
+		$this->button_cell($name, $value, $title, ICON_EDIT);
 	}
 
 	function select_button_cell($name, $value, $title = false)
 	{
-		button_cell($name, $value, $title, ICON_ADD, 'selector');
-	}
-	// -----------------------------------------------------------------------------------
-	function check_value($name)
-	{
-		if (! isset($_POST[$name]))
-			return 0;
-		return 1;
+		$this->button_cell($name, $value, $title, ICON_ADD, 'selector');
 	}
 
 	function checkbox($label, $name, $value = null, $submit_on_change = false, $title = false)
@@ -322,23 +278,19 @@ class InputRendererBootstrap extends \InputRenderer
 
 	function check($label, $name, $value = null, $submit_on_change = false, $title = false)
 	{
-		echo checkbox($label, $name, $value, $submit_on_change, $title);
+		return $this->checkbox($label, $name, $value, $submit_on_change, $title);
 	}
 
 	function check_cells($label, $name, $value = null, $submit_on_change = false, $title = false, $params = '')
 	{
-		if ($label != null)
-			echo "<td>$label</td>\n";
-		echo "<td $params>";
-		echo check(null, $name, $value, $submit_on_change, $title);
-		echo "</td>";
+		$controlAsString = $this->check(null, $name, $value, $submit_on_change, $title);
+		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_CHECK, $label, $controlAsString));
 	}
 
 	function check_row($label, $name, $value = null, $submit_on_change = false, $title = false)
 	{
-		echo "<tr><td class='label'>$label</td>";
-		echo check_cells(NULL, $name, $value, $submit_on_change, $title);
-		echo "</tr>\n";
+		View::get()->layoutHintRow();
+		$this->check_cells($label, $name, $value, $submit_on_change, $title);
 	}
 
 	// -----------------------------------------------------------------------------------
@@ -350,12 +302,13 @@ class InputRendererBootstrap extends \InputRenderer
 		if ($submit_on_change === true)
 			$submit_on_change = "JsHttpRequest.request(\"_{$name}_update\", this.form);";
 
-		return "<input type='radio' name=$name value='$value' " . ($selected ? "checked" : '') . ($submit_on_change ? " onclick='$submit_on_change'" : '') . ">" . ($label ? $label : '');
+		return "<input type='radio' class='form-control' name=$name value='$value' " . ($selected ? "checked" : '') . ($submit_on_change ? " onclick='$submit_on_change'" : '') . ">" . ($label ? $label : '');
 	}
 
 	// -----------------------------------------------------------------------------------
 	function labelheader_cell($label, $params = "")
 	{
+		// TODO
 		echo "<td class='tableheader' $params>$label</td>\n";
 	}
 
@@ -367,8 +320,6 @@ class InputRendererBootstrap extends \InputRenderer
 			$params .= " id='$id'";
 			$Ajax->addUpdate($id, $id, $label);
 		}
-		echo "<td $params>$label</td>\n";
-
 		return $label;
 	}
 
@@ -420,22 +371,14 @@ class InputRendererBootstrap extends \InputRenderer
 
 	function label_cells($label, $value, $params = "", $params2 = "", $id = '')
 	{
-		if ($label != null)
-			echo "<td $params>$label</td>\n";
-		label_cell($value, $params2, $id);
+		$controlAsString = label_cell($value, $params2, $id);
+		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_LABEL, $label, $controlAsString));
 	}
 
 	function label_row($label, $value, $params = "", $params2 = "", $leftfill = 0, $id = '')
 	{
-		echo "<tr>";
-		if ($params == "") {
-			echo "<td class='label'>$label</td>";
-			$label = null;
-		}
-		label_cells($label, $value, $params, $params2, $id);
-		if ($leftfill != 0)
-			echo "<td colspan=$leftfill></td>";
-		echo "</tr>\n";
+		View::get()->layoutHintRow();
+		$this->label_cells($label, $value, $params, $params2, $id);
 	}
 
 	// -----------------------------------------------------------------------------------
@@ -444,18 +387,16 @@ class InputRendererBootstrap extends \InputRenderer
 		global $Ajax;
 
 		default_focus($name);
-		if ($label != null)
-			label_cell($label, $labparams);
-		echo "<td>";
 
 		if ($value === null)
 			$value = get_post($name);
-		echo "<input $inparams type=\"text\" name=\"$name\" size=\"$size\" maxlength=\"$max\" value=\"$value\"" . ($title ? " title='$title'" : '') . ">";
+		$controlAsString = "<input $inparams type=\"text\" class=\"form-control\" name=\"$name\" size=\"$size\" maxlength=\"$max\" value=\"$value\"" . ($title ? " title='$title'" : '') . ">";
 
-		if ($post_label != "")
-			echo " " . $post_label;
+// 		if ($post_label != "")
+// 			echo " " . $post_label;
 
-		echo "</td>\n";
+		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_TEXT, $label, $controlAsString));
+
 		$Ajax->addUpdate($name, $name, $value);
 	}
 
@@ -470,68 +411,64 @@ class InputRendererBootstrap extends \InputRenderer
 			else
 				$_POST[$name] = "";
 		}
-		if ($label != null)
-			label_cell($label, $labparams);
 
 		if (! isset($max))
 			$max = $size;
 
-		echo "<td>";
-		$class = $submit_on_change ? 'class="searchbox"' : '';
-		echo "<input $class type=\"text\" name=\"$name\" size=\"$size\" maxlength=\"$max\" value=\"" . $_POST[$name] . "\"" . ($title ? " title='$title'" : '') . " >";
+		$class = $submit_on_change ? 'class="form-control searchbox"' : 'form-control';
+		$controlAsString = "<input $class type=\"text\" name=\"$name\" size=\"$size\" maxlength=\"$max\" value=\"" . $_POST[$name] . "\"" . ($title ? " title='$title'" : '') . " >";
+// 		if ($post_label)
+// 			echo " " . $post_label;
+		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_TEXT, $label, $controlAsString));
 
-		if ($post_label)
-			echo " " . $post_label;
-
-		echo "</td>\n";
 		$Ajax->addUpdate($name, $name, $_POST[$name]);
 	}
 
 	function text_row($label, $name, $value, $size, $max, $title = null, $params = "", $post_label = "")
 	{
-		echo "<tr><td class='label'>$label</td>";
-		text_cells(null, $name, $value, $size, $max, $title, $params, $post_label);
-
-		echo "</tr>\n";
+		View::get()->layoutHintRow();
+		$this->text_cells($label, $name, $value, $size, $max, $title, $params, $post_label);
 	}
 
 	// -----------------------------------------------------------------------------------
 	function text_row_ex($label, $name, $size, $max = null, $title = null, $value = null, $params = null, $post_label = null)
 	{
-		echo "<tr><td class='label'>$label</td>";
-		text_cells_ex(null, $name, $size, $max, $value, $title, $params, $post_label);
-
-		echo "</tr>\n";
+		View::get()->layoutHintRow();
+		$this->text_cells_ex($label, $name, $size, $max, $value, $title, $params, $post_label);
 	}
 
 	// -----------------------------------------------------------------------------------
 	function email_row($label, $name, $value, $size, $max, $title = null, $params = "", $post_label = "")
 	{
+		View::get()->layoutHintRow();
 		if (get_post($name))
 			$label = "<a href='Mailto:" . $_POST[$name] . "'>$label</a>";
-		text_row($label, $name, $value, $size, $max, $title, $params, $post_label);
+		$this->text_row($label, $name, $value, $size, $max, $title, $params, $post_label);
 	}
 
 	function email_row_ex($label, $name, $size, $max = null, $title = null, $value = null, $params = null, $post_label = null)
 	{
+		View::get()->layoutHintRow();
 		if (get_post($name))
 			$label = "<a href='Mailto:" . $_POST[$name] . "'>$label</a>";
-		text_row_ex($label, $name, $size, $max, $title, $value, $params, $post_label);
+		$this->text_row_ex($label, $name, $size, $max, $title, $value, $params, $post_label);
 	}
 
 	function link_row($label, $name, $value, $size, $max, $title = null, $params = "", $post_label = "")
 	{
+		View::get()->layoutHintRow();
 		$val = get_post($name);
 		if ($val) {
 			if (strpos($val, 'http://') === false)
 				$val = 'http://' . $val;
 			$label = "<a href='$val' target='_blank'>$label</a>";
 		}
-		text_row($label, $name, $value, $size, $max, $title, $params, $post_label);
+		$this->text_row($label, $name, $value, $size, $max, $title, $params, $post_label);
 	}
 
 	function link_row_ex($label, $name, $size, $max = null, $title = null, $value = null, $params = null, $post_label = null)
 	{
+		View::get()->layoutHintRow();
 		$val = get_post($name);
 		if ($val) {
 			if (strpos($val, 'http://') === false)
@@ -571,12 +508,7 @@ class InputRendererBootstrap extends \InputRenderer
 		} else
 			$post_label = "";
 
-		if ($label != null)
-			label_cell($label, $params);
-
-		echo "<td>";
-
-		$class = $submit_on_change ? 'date active' : 'date';
+		$class = $submit_on_change ? 'date active form-control' : 'date form-control';
 
 		$aspect = $check ? 'aspect="cdate"' : '';
 		if ($check && (get_post($name) != Today()))
@@ -584,24 +516,25 @@ class InputRendererBootstrap extends \InputRenderer
 
 		default_focus($name);
 		$size = (user_date_format() > 3) ? 11 : 10;
-		echo "<input type=\"text\" name=\"$name\" class=\"$class\" $aspect size=\"$size\" maxlength=\"12\" value=\"" . $_POST[$name] . "\"" . ($title ? " title='$title'" : '') . " > $post_label";
-		echo "</td>\n";
+
+		$controlAsString = "<input type=\"text\" name=\"$name\" class=\"$class\" $aspect size=\"$size\" maxlength=\"12\" value=\"" . $_POST[$name] . "\"" . ($title ? " title='$title'" : '') . " > $post_label";
+		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_TEXT, $label, $controlAsString)); // CONTROL_DATE? CP 2014-11
+
 		$Ajax->addUpdate($name, $name, $_POST[$name]);
 	}
 
 	function date_row($label, $name, $title = null, $check = null, $inc_days = 0, $inc_months = 0, $inc_years = 0, $params = null, $submit_on_change = false)
 	{
-		echo "<tr><td class='label'>$label</td>";
-		date_cells(null, $name, $title, $check, $inc_days, $inc_months, $inc_years, $params, $submit_on_change);
-		echo "</tr>\n";
+		View::get()->layoutHintRow();
+		$this->date_cells($label, $name, $title, $check, $inc_days, $inc_months, $inc_years, $params, $submit_on_change);
 	}
 
 	// -----------------------------------------------------------------------------------
 	function password_row($label, $name, $value)
 	{
-		echo "<tr><td class='label'>$label</td>";
-		label_cell("<input type='password' name='$name' size=20 maxlength=20 value='$value' />");
-		echo "</tr>\n";
+		View::get()->layoutHintRow();
+		$controlAsString = "<input type='password' class='form-control' name='$name' size=20 maxlength=20 value='$value' />";
+		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_TEXT, $label, $controlAsString)); // CONTROL_PASSWORD? CP 2014-11
 	}
 
 	// -----------------------------------------------------------------------------------
@@ -609,28 +542,27 @@ class InputRendererBootstrap extends \InputRenderer
 	{
 		if ($id != "")
 			$id = "id='$id'";
-		label_cells($label, "<input type='file' name='$name' $id />");
+		$controlAsString = "<input type='file' class='form-control' name='$name' $id />";
+		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_TEXT, $label, $controlAsString)); // CONTROL_FILE? CP 2014-11
 	}
 
 	function file_row($label, $name, $id = "")
 	{
-		echo "<tr><td class='label'>$label</td>";
-		file_cells(null, $name, $id);
-		echo "</tr>\n";
+		View::get()->layoutHintRow();
+		$this->file_cells($label, $name, $id);
 	}
 
 	// -----------------------------------------------------------------------------------
 	function ref_cells($label, $name, $title = null, $init = null, $params = null, $submit_on_change = false)
 	{
-		text_cells_ex($label, $name, 16, 18, $init, $title, $params, null, $submit_on_change);
+		$this->text_cells_ex($label, $name, 16, 18, $init, $title, $params, null, $submit_on_change);
 	}
 
 	// -----------------------------------------------------------------------------------
 	function ref_row($label, $name, $title = null, $init = null, $submit_on_change = false)
 	{
-		echo "<tr><td class='label'>$label</td>";
-		ref_cells(null, $name, $title, $init, null, $submit_on_change);
-		echo "</tr>\n";
+		View::get()->layoutHintRow();
+		$this->ref_cells($label, $name, $title, $init, null, $submit_on_change);
 	}
 
 	// -----------------------------------------------------------------------------------
@@ -640,7 +572,7 @@ class InputRendererBootstrap extends \InputRenderer
 			$_POST[$name] = $init == null ? '' : $init;
 		}
 
-		small_amount_row($label, $name, $_POST[$name], null, "%", user_percent_dec());
+		$this->small_amount_row($label, $name, $_POST[$name], null, "%", user_percent_dec());
 	}
 
 	function amount_cells_ex($label, $name, $size, $max = null, $init = null, $params = null, $post_label = null, $dec = null)
@@ -655,26 +587,18 @@ class InputRendererBootstrap extends \InputRenderer
 			else
 				$_POST[$name] = '';
 		}
-		if ($label != null) {
-			if ($params == null)
-				$params = "class='label'";
-			label_cell($label, $params);
-		}
 		if (! isset($max))
 			$max = $size;
 
-		if ($label != null)
-			echo "<td>";
-		else
-			echo "<td align='right'>";
+		$controlAsString = "<input class='amount form-control' type=\"text\" name=\"$name\" size=\"$size\" maxlength=\"$max\" dec=\"$dec\" value=\"" . $_POST[$name] . "\">";
 
-		echo "<input class='amount' type=\"text\" name=\"$name\" size=\"$size\" maxlength=\"$max\" dec=\"$dec\" value=\"" . $_POST[$name] . "\">";
-
+		// TODO
 		if ($post_label) {
+			throw new \Exception('NYI');
 			echo "<span id='_{$name}_label'> $post_label</span>";
 			$Ajax->addUpdate($name, '_' . $name . '_label', $post_label);
 		}
-		echo "</td>\n";
+		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_TEXT, $label, $controlAsString));
 		$Ajax->addUpdate($name, $name, $_POST[$name]);
 		$Ajax->addAssign($name, $name, 'dec', $dec);
 	}
@@ -682,7 +606,7 @@ class InputRendererBootstrap extends \InputRenderer
 	// -----------------------------------------------------------------------------------
 	function amount_cells($label, $name, $init = null, $params = null, $post_label = null, $dec = null)
 	{
-		amount_cells_ex($label, $name, 15, 15, $init, $params, $post_label, $dec);
+		$this->amount_cells_ex($label, $name, 15, 15, $init, $params, $post_label, $dec);
 	}
 
 	// JAM Allow entered unit prices to be fractional
@@ -691,21 +615,19 @@ class InputRendererBootstrap extends \InputRenderer
 		if (! isset($dec))
 			$dec = user_price_dec() + 2;
 
-		amount_cells_ex($label, $name, 15, 15, $init, $params, $post_label, $dec + 2);
+		$this->amount_cells_ex($label, $name, 15, 15, $init, $params, $post_label, $dec + 2);
 	}
 
 	function amount_row($label, $name, $init = null, $params = null, $post_label = null, $dec = null)
 	{
-		echo "<tr>";
-		amount_cells($label, $name, $init, $params, $post_label, $dec);
-		echo "</tr>\n";
+		View::get()->layoutHintRow();
+		$this->amount_cells($label, $name, $init, $params, $post_label, $dec);
 	}
 
 	function small_amount_row($label, $name, $init = null, $params = null, $post_label = null, $dec = null)
 	{
-		echo "<tr>";
-		small_amount_cells($label, $name, $init, $params, $post_label, $dec);
-		echo "</tr>\n";
+		View::get()->layoutHintRow();
+		$this->small_amount_cells($label, $name, $init, $params, $post_label, $dec);
 	}
 
 	// -----------------------------------------------------------------------------------
@@ -714,33 +636,31 @@ class InputRendererBootstrap extends \InputRenderer
 		if (! isset($dec))
 			$dec = user_qty_dec();
 
-		amount_cells_ex($label, $name, 15, 15, $init, $params, $post_label, $dec);
+		$this->amount_cells_ex($label, $name, 15, 15, $init, $params, $post_label, $dec);
 	}
 
 	function qty_row($label, $name, $init = null, $params = null, $post_label = null, $dec = null)
 	{
+		View::get()->layoutHintRow();
 		if (! isset($dec))
 			$dec = user_qty_dec();
 
-		echo "<tr>";
-		amount_cells($label, $name, $init, $params, $post_label, $dec);
-		echo "</tr>\n";
+		$this->amount_cells($label, $name, $init, $params, $post_label, $dec);
 	}
 
 	function small_qty_row($label, $name, $init = null, $params = null, $post_label = null, $dec = null)
 	{
+		View::get()->layoutHintRow();
 		if (! isset($dec))
 			$dec = user_qty_dec();
 
-		echo "<tr>";
-		small_amount_cells($label, $name, $init, $params, $post_label, $dec);
-		echo "</tr>\n";
+		$this->small_amount_cells($label, $name, $init, $params, $post_label, $dec);
 	}
 
 	// -----------------------------------------------------------------------------------
 	function small_amount_cells($label, $name, $init = null, $params = null, $post_label = null, $dec = null)
 	{
-		amount_cells_ex($label, $name, 7, 12, $init, $params, $post_label, $dec);
+		$this->amount_cells_ex($label, $name, 7, 12, $init, $params, $post_label, $dec);
 	}
 
 	// -----------------------------------------------------------------------------------
@@ -748,7 +668,7 @@ class InputRendererBootstrap extends \InputRenderer
 	{
 		if (! isset($dec))
 			$dec = user_qty_dec();
-		amount_cells_ex($label, $name, 7, 12, $init, $params, $post_label, $dec);
+		$this->amount_cells_ex($label, $name, 7, 12, $init, $params, $post_label, $dec);
 	}
 
 	// -----------------------------------------------------------------------------------
@@ -757,19 +677,20 @@ class InputRendererBootstrap extends \InputRenderer
 		global $Ajax;
 
 		default_focus($name);
-		if ($label != null)
-			echo "<td $params>$label</td>\n";
+
 		if ($value == null)
 			$value = (! isset($_POST[$name]) ? "" : $_POST[$name]);
-		echo "<td style=\"border: 1px solid red\"><textarea name='$name' cols='$cols' rows='$rows'" . ($title ? " title='$title'" : '') . ">$value</textarea></td>\n";
+
+		$controlAsString = "<textarea class='form-control' name='$name' cols='$cols' rows='$rows'" . ($title ? " title='$title'" : '') . ">$value</textarea></td>\n";
+		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_TEXTAREA, $label, $controlAsString));
+
 		$Ajax->addUpdate($name, $name, $value);
 	}
 
 	function textarea_row($label, $name, $value, $cols, $rows, $title = null, $params = "")
 	{
-		echo "<tr><td class='label'>$label</td>";
-		textarea_cells(null, $name, $value, $cols, $rows, $title, $params);
-		echo "</tr>\n";
+		View::get()->layoutHintRow();
+		$this->textarea_cells($label, $name, $value, $cols, $rows, $title, $params);
 	}
 
 	// -----------------------------------------------------------------------------------
@@ -788,6 +709,7 @@ class InputRendererBootstrap extends \InputRenderer
 	//
 	function inactive_control_cell($id, $value, $table, $key)
 	{
+		throw new \Exception('NYI');
 		global $Ajax;
 
 		$name = "Inactive" . $id;
@@ -805,6 +727,7 @@ class InputRendererBootstrap extends \InputRenderer
 	//
 	function inactive_control_row($th)
 	{
+		throw new \Exception('NYI');
 		echo "<tr><td colspan=" . (count($th)) . ">" . "<div style='float:left;'>" . checkbox(null, 'show_inactive', null, true) . _("Show also Inactive") . "</div><div style='float:right;'>" . submit('Update', _('Update'), false, '', null) . "</div></td></tr>";
 	}
 	//
@@ -812,6 +735,7 @@ class InputRendererBootstrap extends \InputRenderer
 	//
 	function inactive_control_column(&$th)
 	{
+		throw new \Exception('NYI');
 		global $Ajax;
 
 		if (check_value('show_inactive'))
@@ -825,14 +749,14 @@ class InputRendererBootstrap extends \InputRenderer
 	{
 		global $path_to_root;
 
-		label_row(_("Current Credit:"), "<a target='_blank' " . ($credit < 0 ? 'class="redfg"' : '') . "href='$path_to_root/sales/inquiry/customer_inquiry.php?customer_id=" . $customer . "'" . " onclick=\"javascript:openWindow(this.href,this.target); return false;\" >" . price_format($credit) . "</a>", $parms);
+		$this->label_row(_("Current Credit:"), "<a target='_blank' " . ($credit < 0 ? 'class="redfg"' : '') . "href='$path_to_root/sales/inquiry/customer_inquiry.php?customer_id=" . $customer . "'" . " onclick=\"javascript:openWindow(this.href,this.target); return false;\" >" . price_format($credit) . "</a>", $parms);
 	}
 
 	function supplier_credit_row($supplier, $credit, $parms = '')
 	{
 		global $path_to_root;
 
-		label_row(_("Current Credit:"), "<a target='_blank' " . ($credit < 0 ? 'class="redfg"' : '') . "href='$path_to_root/purchasing/inquiry/supplier_inquiry.php?supplier_id=" . $supplier . "'" . " onclick=\"javascript:openWindow(this.href,this.target); return false;\" >" . price_format($credit) . "</a>", $parms);
+		$this->label_row(_("Current Credit:"), "<a target='_blank' " . ($credit < 0 ? 'class="redfg"' : '') . "href='$path_to_root/purchasing/inquiry/supplier_inquiry.php?supplier_id=" . $supplier . "'" . " onclick=\"javascript:openWindow(this.href,this.target); return false;\" >" . price_format($credit) . "</a>", $parms);
 	}
 
 	function bank_balance_row($bank_acc, $parms = '')
@@ -841,7 +765,7 @@ class InputRendererBootstrap extends \InputRenderer
 
 		$to = add_days(Today(), 1);
 		$bal = get_balance_before_for_bank_account($bank_acc, $to);
-		label_row(_("Bank Balance:"), "<a target='_blank' " . ($bal < 0 ? 'class="redfg"' : '') . "href='$path_to_root/gl/inquiry/bank_inquiry.php?bank_account=" . $bank_acc . "'" . " onclick=\"javascript:openWindow(this.href,this.target); return false;\" >&nbsp;" . price_format($bal) . "</a>", $parms);
+		$this->label_row(_("Bank Balance:"), "<a target='_blank' " . ($bal < 0 ? 'class="redfg"' : '') . "href='$path_to_root/gl/inquiry/bank_inquiry.php?bank_account=" . $bank_acc . "'" . " onclick=\"javascript:openWindow(this.href,this.target); return false;\" >&nbsp;" . price_format($bal) . "</a>", $parms);
 	}
 }
 

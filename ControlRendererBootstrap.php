@@ -3,6 +3,8 @@ namespace FA\Theme\Bootstrap;
 
 class ControlRendererBootstrap extends \ControlRenderer
 {
+	private $tableContext = '';
+
 	function start_form($multi = false, $dummy = false, $action = "", $name = "")
 	{
 		// $dummy - left for compatibility with 2.0 API
@@ -31,43 +33,49 @@ class ControlRendererBootstrap extends \ControlRenderer
 		$Ajax->activate('_token');
 	}
 
-	function check_csrf_token()
-	{
-		if ($_SESSION['csrf_token'] != @$_POST['_token']) {
-			display_error(_("Request from outside of this page is forbidden."));
-			error_log(_("CSRF attack detected from: ") . @$_SERVER['HTTP_HOST'] . ' (' . @$_SERVER['HTTP_REFERER'] . ')');
-			return false;
-		}
-		return true;
-	}
-
 	function start_table($class = false, $extra = "", $padding = '2', $spacing = '0')
 	{
+		return;
+		$this->tableContext = $class;
+		$classAttribute = '';
 		switch ($class) {
 			case TABLESTYLE_NOBORDER:
-				$class = 'tablestyle_noborder';
+				$classAttribute = 'tablestyle_noborder';
 				break;
 			case TABLESTYLE2:
-				$class = 'tablestyle2';
+				$classAttribute = 'tablestyle2';
 				break;
 			case TABLESTYLE:
-				$class = 'tablestyle';
+				$classAttribute = 'tablestyle';
 				break;
 		}
 		$context = array(
-			'class' => $class,
+			'class' => $classAttribute,
 			'extra' => $extra,
 			'padding' => $padding,
 			'spacing' => $spacing,
 		);
-		echo ThemeBootstrap::get()->renderBlock('controls.twig.html', 'table', $context);
+		switch ($class) {
+			case TABLESTYLE_NOBORDER:
+				echo ThemeBootstrap::get()->renderBlock('controls.twig.html', 'table', $context);
+				break;
+			case TABLESTYLE2:
+				echo ThemeBootstrap::get()->renderBlock('controls.twig.html', 'table2', $context);
+				break;
+			case TABLESTYLE:
+				echo ThemeBootstrap::get()->renderBlock('controls.twig.html', 'table', $context);
+				break;
+			default:
+				echo ThemeBootstrap::get()->renderBlock('controls.twig.html', 'table', $context);
+		}
 	}
 
 	function end_table($breaks = 0)
 	{
-		echo ThemeBootstrap::get()->renderBlock('controls.twig.html', 'table_end', array());
-		if ($breaks)
-			br($breaks);
+		View::get()->render();
+// 		if ($breaks)
+// 			br($breaks);
+// 		$this->tableContext = '';
 	}
 
 	function start_outer_table($class = false, $extra = "", $padding = '2', $spacing = '0', $br = false)
@@ -81,12 +89,8 @@ class ControlRendererBootstrap extends \ControlRenderer
 	function table_section($number = 1, $width = false)
 	{
 		if ($number > 1) {
-			echo "</table>\n";
-			$width = ($width ? "width=$width" : "");
-			// echo "</td><td class='tableseparator' $width>\n"; // outer table
-			echo "</td><td style='border-left:1px solid #cccccc;' $width>\n"; // outer table
+			View::get()->layoutHintColumn($number);
 		}
-		echo "<table class='tablestyle_inner'>\n";
 	}
 
 	function end_outer_table($breaks = 0, $close_table = true)
@@ -213,18 +217,17 @@ class ControlRendererBootstrap extends \ControlRenderer
 		$pars = access_string($label);
 		if ($target == '')
 			$target = $_SERVER['PHP_SELF'];
-		if ($center)
-			echo "<br><center>";
-		echo "<a id='$id' href='$target?$params'$pars[1]>$pars[0]</a>\n";
-		if ($center)
-			echo "</center>";
+// 		if ($center)
+// 			echo "<br><center>";
+		$controlAsString = "<a id='$id' href='$target?$params'$pars[1]>$pars[0]</a>\n";
+		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_LINK, '', $controlAsString));
+// 		if ($center)
+// 			echo "</center>";
 	}
 
 	function hyperlink_params_td($target, $label, $params)
 	{
-		echo "<td>";
-		hyperlink_params($target, $label, $params, false);
-		echo "</td>\n";
+		$this->hyperlink_params($target, $label, $params, false);
 	}
 
 	// -----------------------------------------------------------------------------------
@@ -233,23 +236,23 @@ class ControlRendererBootstrap extends \ControlRenderer
 		$id = default_focus();
 
 		$pars = access_string($label);
-		if ($center)
-			echo "<br><center>";
-		echo "<a target='_blank' id='$id' href='$target?$params' $pars[1]>$pars[0]</a>\n";
-		if ($center)
-			echo "</center>";
+// 		if ($center)
+// 			echo "<br><center>";
+		$controlAsString = "<a target='_blank' id='$id' href='$target?$params' $pars[1]>$pars[0]</a>\n";
+		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_LINK, '', $controlAsString));
+// 		if ($center)
+// 			echo "</center>";
 	}
 
 	function hyperlink_params_separate_td($target, $label, $params)
 	{
-		echo "<td>";
-		hyperlink_params_separate($target, $label, $params);
-		echo "</td>\n";
+		$this->hyperlink_params_separate($target, $label, $params);
 	}
 
 	// --------------------------------------------------------------------------------------------------
 	function alt_table_row_color(&$k, $extra_class = null)
 	{
+		// TODO LayoutHint table layout
 		$classes = $extra_class ? array(
 			$extra_class
 		) : array();
@@ -265,7 +268,7 @@ class ControlRendererBootstrap extends \ControlRenderer
 
 	function table_section_title($msg, $colspan = 2)
 	{
-		echo "<tr><td colspan=$colspan class='tableheader'>$msg</td></tr>\n";
+		View::get()->addControl(View::controlHeading($msg));
 	}
 
 	function table_header($labels, $params = '')
@@ -278,27 +281,29 @@ class ControlRendererBootstrap extends \ControlRenderer
 	// -----------------------------------------------------------------------------------
 	function start_row($param = "")
 	{
-		if ($param != "")
-			echo "<tr $param>\n";
-		else
-			echo "<tr>\n";
+		View::get()->layoutHintRow();
+// 		if ($param != "")
+// 			echo "<tr $param>\n";
+// 		else
+// 			echo "<tr>\n";
 	}
 
 	function end_row()
 	{
-		echo "</tr>\n";
+// 		echo "</tr>\n";
 	}
 
 	function br($num = 1)
 	{
-		for ($i = 0; $i < $num; $i ++)
-			echo "<br>";
+// 		for ($i = 0; $i < $num; $i ++)
+// 			echo "<br>";
 	}
 
 	var $ajax_divs = array();
 
 	function div_start($id = '', $trigger = null, $non_ajax = false)
 	{
+		// TODO
 		if ($non_ajax) { // div for non-ajax elements
 			array_push($this->ajax_divs, array(
 				$id,
@@ -319,6 +324,7 @@ class ControlRendererBootstrap extends \ControlRenderer
 	{
 		global $Ajax;
 
+		// TODO
 		if (count($this->ajax_divs)) {
 			$div = array_pop($this->ajax_divs);
 			if ($div[1] !== null)

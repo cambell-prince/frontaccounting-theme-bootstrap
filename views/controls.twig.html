@@ -18,19 +18,78 @@
 </table></center>
 {% endblock table_end %}
 
+{% block table2 %}
+<center><table style="border: 1px solid blue" class="{{ class }}" {{ extra }} cellpadding="{{padding}}" cellspacing=""{{spacing}}>
+{% endblock table2 %}
 
+{% block table2_end %}
+</table></center>
+{% endblock table2_end %}
+
+{% block view %}
+<div role="form" class="form-inline well">
+{% for control in controls %}
+	{% if control.type == 'check' %}
+	<div class="checkbox">
+	<label>
+		{{ control.controlAsString | raw }} {{ control.label }}
+	</label>
+	</div>
+	{% elseif control.type == 'hidden' %}
+	{{ control.controlAsString | raw }}
+	{% else %}
+	<div class="form-group">
+	<label class="col-sm-3 control-label">{{ control.label }}</label>
+	{{ control.controlAsString | raw }}
+	</div>
+	{% endif %}
+{% endfor %}
+</div>
+{% endblock view %}
+
+{% block view2col %}
+<div role="form" class="form-horizontal">
+{% for column in columns %}
+<div class="col-sm-6">
+{% for control in column.controls %}
+	{% if control.type == 'check' %}
+	<div class="form-group">
+	<label class="col-sm-4">{{ control.label }}</label>
+	<div class="col-sm-8">
+	{{ control.controlAsString | raw }}
+	</div>
+	</div>
+	{% elseif control.type == 'heading' %}
+	<h4 class="col-sm-12">{{ control.label }}</h4>
+	{% elseif control.type == 'hidden' %}
+	{{ control.controlAsString | raw }}
+	{% else %}
+	<div class="form-group">
+	<label class="col-sm-4 control-label">{{ control.label }}</label>
+	<div class="col-sm-8">
+	{{ control.controlAsString | raw }}
+	</div>
+	</div>
+	{% endif %}
+{% endfor %}
+</div>
+{% endfor %}
+</div>
+{% endblock view2col %}
 
 {% block tabs %}
+<div class="container">
 <ul class="ajaxtabs nav nav-tabs" role="tablist" rel="{{ divID }}">
 	{% for tab in tabs %}
 	<li role="presentation" {% if tab.isActive %} class="active" {% endif%}><button type="submit" name="{{ tab.name }}" {{ tab.accessKey}} {{ tab.disabled }}>{{ tab.text | raw }}</button></li>
 	{% endfor %}
 </ul>
-<div class="spaceBox"></div>
+<!-- <div class="spaceBox"></div> -->
 <input type="hidden" name="{{ selName }}" value="{{ sel }}">
 <div class="contentBox" id="divID">
 {% endblock tabs %}
 
 {% block tabs_end %}
+</div>
 </div>
 {% endblock tabs_end %}

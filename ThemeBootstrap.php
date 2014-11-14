@@ -68,6 +68,8 @@ class ThemeBootstrap
 				return 'fa-rotate-left';
 			case ICON_ALLOC:
 				return '';
+			case 'delete':
+				return 'fa-times';
 
 		}
 		return '';

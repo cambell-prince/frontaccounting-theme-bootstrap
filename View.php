@@ -63,6 +63,7 @@ class View
 	const LAYOUT_INLINE = 'form-inline';
 	const LAYOUT_FORM1COL = 'form1';
 	const LAYOUT_FORM2COL = 'form2';
+	const LAYOUT_FORM3COL = 'form3';
 	const LAYOUT_TABLE = 'table';
 
 	const CONTROL_HEADING = 'heading';
@@ -140,6 +141,7 @@ class View
 	public function layoutHintRow()
 	{
 		if ($this->layout == self::LAYOUT_FORM2COL ||
+			$this->layout == self::LAYOUT_FORM3COL ||
 			$this->layout == self::LAYOUT_TABLE
 		) {
 			return;
@@ -158,6 +160,11 @@ class View
 		if ($columnNumber == 2) {
 			$this->layout = self::LAYOUT_FORM2COL;
 			$this->column = 2;
+		} elseif ($columnNumber == 3) {
+			$this->layout = self::LAYOUT_FORM3COL;
+			$this->column = 3;
+		} elseif ($columnNumber > 3) {
+			throw new \Exception('More than 2 columns is not supported');
 		}
 	}
 
@@ -184,12 +191,17 @@ class View
 
 	public function tableRowStart()
 	{
-		$this->layout = self::LAYOUT_TABLE;
+		if (!$this->layout == self::LAYOUT_TABLE) {
+			return;
+		}
 		$this->currentTableRow = new TableElement(TableElement::TE_ROW);
 	}
 
 	public function tableRowEnd()
 	{
+		if (!$this->layout == self::LAYOUT_TABLE) {
+			return;
+		}
 		if (!isset($this->currentTableBody)) {
 			$this->currentTableBody = new TableElement(TableElement::TE_BODY);
 			$this->controls[] = $this->currentTableBody;
@@ -237,7 +249,31 @@ class View
 					'columns' => $columns,
 					'layout' => $this->layout
 				);
-				echo ThemeBootstrap::get()->renderBlock('controls.twig.html', 'view2col', $context);
+				echo ThemeBootstrap::get()->renderBlock('controls.twig.html', 'view_2col', $context);
+				break;
+
+			case self::LAYOUT_FORM3COL:
+				$columns = array();
+				$columns[0] = array(
+					'controls' => array(),
+					'class' => 'col-sm-4'
+				);
+				$columns[1] = array(
+					'controls' => array(),
+					'class' => 'col-sm-4'
+				);
+				$columns[2] = array(
+					'controls' => array(),
+					'class' => 'col-sm-4'
+				);
+				foreach ($this->controls as $control) {
+					$columns[$control->column - 1]['controls'][] = $control;
+				}
+				$context = array(
+					'columns' => $columns,
+					'layout' => $this->layout
+				);
+				echo ThemeBootstrap::get()->renderBlock('controls.twig.html', 'view_3col', $context);
 				break;
 
 			case self::LAYOUT_TABLE:
@@ -246,6 +282,14 @@ class View
 					'layout' => $this->layout
 				);
 				echo ThemeBootstrap::get()->renderBlock('controls.twig.html', 'view_table', $context);
+				break;
+
+			case self::LAYOUT_FORM1COL:
+				$context = array(
+					'controls' => $this->controls,
+					'layout' => $this->layout
+				);
+				echo ThemeBootstrap::get()->renderBlock('controls.twig.html', 'view_1col_horizontal', $context);
 				break;
 
 			default:

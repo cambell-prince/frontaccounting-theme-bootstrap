@@ -27,13 +27,14 @@
 {% endblock table2_end %}
 
 {% block view_table %}
-<table class="table">
+<div class="container">
+<table class="table table-condensed">
 {% for element in controls %}
 {% if element.type == 'header' %}
 <thead>
 <tr>
 {% for cell in element.content %}
-<th>{{ cell }}</th>
+<th>{{ cell | raw }}</th>
 {% endfor %}
 </tr>
 </thead>
@@ -50,10 +51,12 @@
 {% endif %}
 {% endfor %}
 </table>
+</div>
 {% endblock view_table %}
 
 {% block view %}
-<div role="form" class="form-inline well">
+<div class="container">
+<div role="form" class="form-inline">
 {% for control in controls %}
 	{% if control.type == 'check' %}
 	<div class="checkbox">
@@ -71,9 +74,74 @@
 	{% endif %}
 {% endfor %}
 </div>
+</div>
 {% endblock view %}
 
-{% block view2col %}
+{% block view_1col_vertical %}
+<div role="form" class="well">
+{% for control in controls %}
+	{% if control.type == 'check' %}
+	<div class="checkbox">
+	<label>
+		{{ control.controlAsString | raw }} {{ control.label }}
+	</label>
+	</div>
+	{{ control.controlAsString | raw }}
+	</div>
+	{% elseif control.type == 'hidden' %}
+	{{ control.controlAsString | raw }}
+	{% else %}
+	<div class="form-group">
+	<label class="col-sm-3 control-label">{{ control.label }}</label>
+	{{ control.controlAsString | raw }}
+	</div>
+	{% endif %}
+{% endfor %}
+</div>
+{% endblock view_1col_vertical %}
+
+{% block view_1col_horizontal %}
+<div role="form" class="container form-horizontal"><!-- {{ layout }} -->
+{% for control in controls %}
+	{% if control.type == 'check' %}
+	<div class="form-group">
+	<label class="col-sm-2">{{ control.label }}</label>
+	<div class="col-sm-5">
+	{{ control.controlAsString | raw }}
+	</div>
+	</div>
+	{% elseif control.type == 'label' %}
+	<div class="form-group">
+	<label class="col-sm-2 control-label">{{ control.label }}</label>
+	<div class="col-sm-5">
+	<p class="form-control-static">{{ control.controlAsString | raw }}</p>
+	</div>
+	</div>
+	{% elseif control.type == 'file' %}
+	<div class="form-group">
+	<label class="col-sm-2">{{ control.label }}</label>
+	<div class="col-sm-5">
+	{{ control.controlAsString | raw }}
+	</div>
+	</div>
+	{% elseif control.type == 'heading' %}
+	<h4 class="col-sm-12">{{ control.label }}</h4>
+	{% elseif control.type == 'hidden' %}
+	{{ control.controlAsString | raw }}
+	{% else %}
+	<div class="form-group">
+	<label class="col-sm-2 control-label">{{ control.label }}</label>
+	<div class="col-sm-5">
+	{{ control.controlAsString | raw }}
+	</div>
+	</div>
+	{% endif %}
+{% endfor %}
+</div>
+{% endblock view_1col_horizontal %}
+
+{% block view_2col %}
+<div class="container"><!-- {{layout}} -->
 <div role="form" class="form-horizontal">
 <div class="row">
 {% for column in columns %}
@@ -84,6 +152,13 @@
 	<label class="col-sm-5">{{ control.label }}</label>
 	<div class="col-sm-7">
 	{{ control.controlAsString | raw }}
+	</div>
+	</div>
+	{% elseif control.type == 'label' %}
+	<div class="form-group">
+	<label class="col-sm-5 control-label">{{ control.label }}</label>
+	<div class="col-sm-7">
+	<p class="form-control-static">{{ control.controlAsString | raw }}</p>
 	</div>
 	</div>
 	{% elseif control.type == 'file' %}
@@ -110,7 +185,56 @@
 {% endfor %}
 </div>
 </div>
-{% endblock view2col %}
+</div>
+{% endblock view_2col %}
+
+{% block view_3col %}
+<div class="container"><!-- {{layout}} -->
+<div role="form" class="form-horizontal">
+<div class="row">
+{% for column in columns %}
+<div class="{{ column.class }}">
+{% for control in column.controls %}
+	{% if control.type == 'check' %}
+	<div class="form-group">
+	<label class="col-sm-4">{{ control.label }}</label>
+	<div class="col-sm-8">
+	{{ control.controlAsString | raw }}
+	</div>
+	</div>
+	{% elseif control.type == 'label' %}
+	<div class="form-group">
+	<label class="col-sm-4 control-label">{{ control.label }}</label>
+	<div class="col-sm-8">
+	<p class="form-control-static">{{ control.controlAsString | raw }}</p>
+	</div>
+	</div>
+	{% elseif control.type == 'file' %}
+	<div class="form-group">
+	<label class="col-sm-4">{{ control.label }}</label>
+	<div class="col-sm-8">
+	{{ control.controlAsString | raw }}
+	</div>
+	</div>
+	{% elseif control.type == 'heading' %}
+	<h4 class="col-sm-12">{{ control.label }}</h4>
+	{% elseif control.type == 'hidden' %}
+	{{ control.controlAsString | raw }}
+	{% else %}
+	<div class="form-group">
+	<label class="col-sm-4 control-label">{{ control.label }}</label>
+	<div class="col-sm-8">
+	{{ control.controlAsString | raw }}
+	</div>
+	</div>
+	{% endif %}
+{% endfor %}
+</div>
+{% endfor %}
+</div>
+</div>
+</div>
+{% endblock view_3col %}
 
 {% block tabs %}
 <div class="container">

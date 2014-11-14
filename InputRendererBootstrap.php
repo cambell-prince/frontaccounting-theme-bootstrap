@@ -118,7 +118,7 @@ class InputRendererBootstrap extends \InputRenderer
 				}
 			}
 		}
-		$iconClass = ThemeBootstrap::fontAwesomeIcon($icon);
+		$iconClass = ThemeBootstrap::fontAwesomeIcon($icon ? $icon : $name);
 		$submit_str = "<button class=\"btn btn-default " . ($atype ? 'ajaxsubmit' : 'inputsubmit') . "\" type=\"submit\"" . $aspect . " name=\"$name\"  id=\"$name\" value=\"$value\"" . ($title ? " title='$title'" : '') . ">";
 		if ($iconClass) {
 			$submit_str .= "<i class=\"fa $iconClass\"></i>";
@@ -382,7 +382,7 @@ class InputRendererBootstrap extends \InputRenderer
 	function label_cells($label, $value, $params = "", $params2 = "", $id = '')
 	{
 		$label = ($label == '&nbsp;') ? '' : $label;
-		$controlAsString = label_cell($value, $params2, $id);
+		$controlAsString = $value;
 		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_LABEL, $label, $controlAsString));
 	}
 
@@ -603,10 +603,9 @@ class InputRendererBootstrap extends \InputRenderer
 
 		$controlAsString = "<input class='amount form-control' type=\"text\" name=\"$name\" size=\"$size\" maxlength=\"$max\" dec=\"$dec\" value=\"" . $_POST[$name] . "\">";
 
-		// TODO
 		if ($post_label) {
-			throw new \Exception('NYI');
-			echo "<span id='_{$name}_label'> $post_label</span>";
+			$spanAsString = "<span id='_{$name}_label'> $post_label</span>";
+			View::get()->addControl(View::controlFromRenderedString(View::CONTROL_TEXT, $label, $spanAsString));
 			$Ajax->addUpdate($name, '_' . $name . '_label', $post_label);
 		}
 		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_TEXT, $label, $controlAsString));

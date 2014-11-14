@@ -97,6 +97,7 @@ class ControlRendererBootstrap extends \ControlRenderer
 
 	function end_outer_table($breaks = 0, $close_table = true)
 	{
+		View::get()->render();
 // 		if ($close_table)
 // 			echo "</table>\n";
 // 		echo "</td></tr>\n";
@@ -376,6 +377,7 @@ class ControlRendererBootstrap extends \ControlRenderer
 
 	function tabbed_content_end()
 	{
+		View::get()->render();
 		// content box (don't change to div_end() unless div_start() is used above)
 		echo ThemeBootstrap::get()->renderBlock('controls.twig.html', 'tabs_end', array());
 		div_end(); // tabs widget

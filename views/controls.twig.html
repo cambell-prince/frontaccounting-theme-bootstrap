@@ -26,6 +26,32 @@
 </table></center>
 {% endblock table2_end %}
 
+{% block view_table %}
+<table class="table">
+{% for element in controls %}
+{% if element.type == 'header' %}
+<thead>
+<tr>
+{% for cell in element.content %}
+<th>{{ cell }}</th>
+{% endfor %}
+</tr>
+</thead>
+{% elseif element.type == 'body' %}
+<tbody>
+{% for row in element.content %}
+<tr>
+{% for cell in row.content %}
+<td>{{ cell.content | raw }}</td>
+{% endfor %}
+</tr>
+{% endfor %}
+</tbody>
+{% endif %}
+{% endfor %}
+</table>
+{% endblock view_table %}
+
 {% block view %}
 <div role="form" class="form-inline well">
 {% for control in controls %}

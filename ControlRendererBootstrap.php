@@ -73,6 +73,7 @@ class ControlRendererBootstrap extends \ControlRenderer
 
 	function end_table($breaks = 0)
 	{
+		View::get()->tableEnd();
 		View::get()->render();
 // 		if ($breaks)
 // 			br($breaks);
@@ -81,10 +82,10 @@ class ControlRendererBootstrap extends \ControlRenderer
 
 	function start_outer_table($class = false, $extra = "", $padding = '2', $spacing = '0', $br = false)
 	{
-		if ($br)
-			br();
-		start_table($class, $extra, $padding, $spacing);
-		echo "<tr valign=top><td>\n"; // outer table
+// 		if ($br)
+// 			br();
+// 		start_table($class, $extra, $padding, $spacing);
+// 		echo "<tr valign=top><td>\n"; // outer table
 	}
 
 	function table_section($number = 1, $width = false)
@@ -96,17 +97,17 @@ class ControlRendererBootstrap extends \ControlRenderer
 
 	function end_outer_table($breaks = 0, $close_table = true)
 	{
-		if ($close_table)
-			echo "</table>\n";
-		echo "</td></tr>\n";
-		end_table($breaks);
+// 		if ($close_table)
+// 			echo "</table>\n";
+// 		echo "</td></tr>\n";
+// 		end_table($breaks);
 	}
 	//
 	// outer table spacer
 	//
 	function vertical_space($params = '')
 	{
-		echo "</td></tr><tr><td valign=center $params>";
+// 		echo "</td></tr><tr><td valign=center $params>";
 	}
 
 	function meta_forward($forward_to, $params = "")
@@ -274,24 +275,17 @@ class ControlRendererBootstrap extends \ControlRenderer
 
 	function table_header($labels, $params = '')
 	{
-		start_row();
-		foreach ($labels as $label)
-			labelheader_cell($label, $params);
-		end_row();
+		View::get()->tableAddHeader($labels);
 	}
 	// -----------------------------------------------------------------------------------
 	function start_row($param = "")
 	{
-		View::get()->layoutHintRow();
-// 		if ($param != "")
-// 			echo "<tr $param>\n";
-// 		else
-// 			echo "<tr>\n";
+		View::get()->tableRowStart();
 	}
 
 	function end_row()
 	{
-// 		echo "</tr>\n";
+		View::get()->tableRowEnd();
 	}
 
 	function br($num = 1)

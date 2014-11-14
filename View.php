@@ -30,6 +30,32 @@ class Control
 
 }
 
+class TableElement
+{
+	const TE_HEADER = 'header';
+	const TE_BODY = 'body';
+	const TE_ROW = 'row';
+
+	public $type;
+
+	public $content;
+
+	public function __construct($type)
+	{
+		$this->type = $type;
+		$this->content = array();
+	}
+}
+
+class TableCell
+{
+	public $content;
+
+	public function __construct($content) {
+		$this->content = $content;
+	}
+}
+
 class View
 {
 
@@ -113,10 +139,15 @@ class View
 
 	public function layoutHintRow()
 	{
+		if ($this->layout == self::LAYOUT_FORM2COL ||
+			$this->layout == self::LAYOUT_TABLE
+		) {
+			return;
+		}
 		$this->rowCount++;
 		if ($this->rowCount == 1) {
 			$this->layout = self::LAYOUT_INLINE;
-		} elseif ($this->rowCount >= 2 && $this->layout != self::LAYOUT_FORM2COL) {
+		} elseif ($this->rowCount >= 2) {
 			$this->layout = self::LAYOUT_FORM1COL;
 		}
 
@@ -130,11 +161,56 @@ class View
 		}
 	}
 
+	/**
+	 * @param Control $control
+	 */
 	public function addControl($control)
 	{
+		if ($this->layout == self::LAYOUT_TABLE) {
+			$this->tableAddCell($control->controlAsString);
+			return;
+		}
 		$control->column = $this->column;
 		$this->controls[] = $control;
 	}
+
+	public function tableAddHeader($cells)
+	{
+		$this->layout = self::LAYOUT_TABLE;
+		$tableElement = new TableElement(TableElement::TE_HEADER);
+		$tableElement->content = $cells;
+		$this->controls[] = $tableElement;
+	}
+
+	public function tableRowStart()
+	{
+		$this->layout = self::LAYOUT_TABLE;
+		$this->currentTableRow = new TableElement(TableElement::TE_ROW);
+	}
+
+	public function tableRowEnd()
+	{
+		if (!isset($this->currentTableBody)) {
+			$this->currentTableBody = new TableElement(TableElement::TE_BODY);
+			$this->controls[] = $this->currentTableBody;
+		}
+		$this->currentTableBody->content[] = $this->currentTableRow;
+		$this->currentTableRow = null;
+	}
+
+	public function tableAddCell($cellAsString)
+	{
+		$this->currentTableRow->content[] = new TableCell($cellAsString);
+	}
+
+	public function tableEnd()
+	{
+		if ($this->layout != self::LAYOUT_TABLE) {
+			return;
+		}
+		// Currently nothing to do.
+	}
+
 
 	public function render()
 	{
@@ -163,6 +239,15 @@ class View
 				);
 				echo ThemeBootstrap::get()->renderBlock('controls.twig.html', 'view2col', $context);
 				break;
+
+			case self::LAYOUT_TABLE:
+				$context = array(
+					'controls' => $this->controls,
+					'layout' => $this->layout
+				);
+				echo ThemeBootstrap::get()->renderBlock('controls.twig.html', 'view_table', $context);
+				break;
+
 			default:
 				$context = array(
 					'controls' => $this->controls,
@@ -172,5 +257,6 @@ class View
 		}
 		$this->reset();
 	}
+
 
 }

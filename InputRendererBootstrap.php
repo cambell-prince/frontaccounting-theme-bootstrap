@@ -242,7 +242,7 @@ class InputRendererBootstrap extends \InputRenderer
 	function button_cell($name, $value, $title = false, $icon = false, $aspect = '')
 	{
 		$controlAsString = button($name, $value, $title, $icon, $aspect);
-		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_BUTTON, $label, $controlAsString));
+		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_BUTTON, '', $controlAsString));
 	}
 
 	function delete_button_cell($name, $value, $title = false)
@@ -319,12 +319,17 @@ class InputRendererBootstrap extends \InputRenderer
 
 	function label_cell($label, $params = "", $id = null)
 	{
+		/*
+		 * This function is assumed to be only for real tables.
+		 */
+
 		global $Ajax;
 
 		if (isset($id)) {
 			$params .= " id='$id'";
 			$Ajax->addUpdate($id, $id, $label);
 		}
+		View::get()->tableAddCell($label); // What to do with id? CP 2014-11
 		return $label;
 	}
 
@@ -715,7 +720,6 @@ class InputRendererBootstrap extends \InputRenderer
 	//
 	function inactive_control_cell($id, $value, $table, $key)
 	{
-		throw new \Exception('NYI');
 		global $Ajax;
 
 		$name = "Inactive" . $id;
@@ -725,6 +729,7 @@ class InputRendererBootstrap extends \InputRenderer
 			if (isset($_POST['LInact'][$id]) && (get_post('_Inactive' . $id . '_update') || get_post('Update')) && (check_value('Inactive' . $id) != $value)) {
 				update_record_status($id, ! $value, $table, $key);
 			}
+			// TODO Fix these td. CP 2014-11
 			echo '<td align="center">' . checkbox(null, $name, $value, true, '') . hidden("LInact[$id]", $value, false) . '</td>';
 		}
 	}
@@ -733,7 +738,6 @@ class InputRendererBootstrap extends \InputRenderer
 	//
 	function inactive_control_row($th)
 	{
-		throw new \Exception('NYI');
 		echo "<tr><td colspan=" . (count($th)) . ">" . "<div style='float:left;'>" . checkbox(null, 'show_inactive', null, true) . _("Show also Inactive") . "</div><div style='float:right;'>" . submit('Update', _('Update'), false, '', null) . "</div></td></tr>";
 	}
 	//
@@ -741,7 +745,6 @@ class InputRendererBootstrap extends \InputRenderer
 	//
 	function inactive_control_column(&$th)
 	{
-		throw new \Exception('NYI');
 		global $Ajax;
 
 		if (check_value('show_inactive'))

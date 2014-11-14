@@ -25,6 +25,54 @@ class ThemeBootstrap
 		return $instance;
 	}
 
+	public static function fontAwesomeIcon($icon)
+	{
+		switch ($icon) {
+			case ICON_EDIT:
+				return 'fa-edit';
+			case ICON_DELETE:
+				return 'fa-times';
+			case ICON_ADD:
+				return 'fa-check';
+			case ICON_UPDATE:
+				return 'fa-check';
+			case ICON_OK:
+				return 'fa-check';
+			case ICON_CANCEL:
+				return 'fa-times';
+			case ICON_GL:
+				return '';
+			case ICON_PRINT:
+				return 'fa-print';
+			case ICON_PDF:
+				return 'fa-file-pdf-o';
+			case ICON_DOC:
+				return 'fa-file-o';
+			case ICON_CREDIT:
+				return '';
+			case ICON_RECEIVE:
+				return '';
+			case ICON_DOWN:
+				return '';
+			case ICON_MONEY:
+				return 'fa-dollar';
+			case ICON_REMOVE:
+				return 'fa-times';
+			case ICON_REPORT:
+				return 'fa-file-text-o';
+			case ICON_VIEW:
+				return '';
+			case ICON_SUBMIT:
+				return 'fa-check';
+			case ICON_ESCAPE:
+				return 'fa-rotate-left';
+			case ICON_ALLOC:
+				return '';
+
+		}
+		return '';
+	}
+
 	public function render($template, $context)
 	{
 		return $this->twig->render($template, $context);

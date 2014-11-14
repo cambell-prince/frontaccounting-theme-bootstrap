@@ -260,9 +260,9 @@ class ListRendererBootstrap extends \ListRenderer
 		}
 		default_focus(($search_box && $by_id) ? $search_box : $name);
 
-		if ($search_box && $opts['cells'])
-			$str = ($edit_entry != '' ? "<td>$edit_entry</td>" : '') . "<td>$selector</td>";
-		else
+// 		if ($search_box && $opts['cells'])
+// 			$str = ($edit_entry != '' ? "<td>$edit_entry</td>" : '') . "<td>$selector</td>";
+// 		else
 			$str = $edit_entry . $selector;
 		return $str;
 	}

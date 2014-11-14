@@ -1,6 +1,6 @@
 {% block form %}
 	{% if multi %}
-	<form role="form" enctype='multipart/form-data' method='post' action='{{ action }}' {{ name }}>
+	<form role="form" enctype='multipart/form-data' method='post' action='{{ action }}' name='{{name}}'>
 	{% else %}
 	<form role="form" method='post' action='{{action}}' {{ name }}>
 	{% endif %}
@@ -49,13 +49,21 @@
 
 {% block view2col %}
 <div role="form" class="form-horizontal">
+<div class="row">
 {% for column in columns %}
 <div class="col-sm-6">
 {% for control in column.controls %}
 	{% if control.type == 'check' %}
 	<div class="form-group">
-	<label class="col-sm-4">{{ control.label }}</label>
-	<div class="col-sm-8">
+	<label class="col-sm-5">{{ control.label }}</label>
+	<div class="col-sm-7">
+	{{ control.controlAsString | raw }}
+	</div>
+	</div>
+	{% elseif control.type == 'file' %}
+	<div class="form-group">
+	<label class="col-sm-5">{{ control.label }}</label>
+	<div class="col-sm-7">
 	{{ control.controlAsString | raw }}
 	</div>
 	</div>
@@ -65,8 +73,8 @@
 	{{ control.controlAsString | raw }}
 	{% else %}
 	<div class="form-group">
-	<label class="col-sm-4 control-label">{{ control.label }}</label>
-	<div class="col-sm-8">
+	<label class="col-sm-5 control-label">{{ control.label }}</label>
+	<div class="col-sm-7">
 	{{ control.controlAsString | raw }}
 	</div>
 	</div>
@@ -74,6 +82,7 @@
 {% endfor %}
 </div>
 {% endfor %}
+</div>
 </div>
 {% endblock view2col %}
 

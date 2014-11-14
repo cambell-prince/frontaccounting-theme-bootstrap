@@ -118,7 +118,12 @@ class InputRendererBootstrap extends \InputRenderer
 				}
 			}
 		}
-		$submit_str = "<button class=\"btn " . ($atype ? 'ajaxsubmit' : 'inputsubmit') . "\" type=\"submit\"" . $aspect . " name=\"$name\"  id=\"$name\" value=\"$value\"" . ($title ? " title='$title'" : '') . ">" . ($icon ? "<img src='$path_to_root/themes/" . user_theme() . "/images/$icon' height='12'>" : '') . "<span>$value</span>" . "</button>\n";
+		$iconClass = ThemeBootstrap::fontAwesomeIcon($icon);
+		$submit_str = "<button class=\"btn btn-default " . ($atype ? 'ajaxsubmit' : 'inputsubmit') . "\" type=\"submit\"" . $aspect . " name=\"$name\"  id=\"$name\" value=\"$value\"" . ($title ? " title='$title'" : '') . ">";
+		if ($iconClass) {
+			$submit_str .= "<i class=\"fa $iconClass\"></i>";
+		}
+		$submit_str .= $value . "</button>\n";
 		if ($echo)
 			View::get()->addControl(View::controlFromRenderedString(View::CONTROL_BUTTON, '', $submit_str));
 		else
@@ -371,6 +376,7 @@ class InputRendererBootstrap extends \InputRenderer
 
 	function label_cells($label, $value, $params = "", $params2 = "", $id = '')
 	{
+		$label = ($label == '&nbsp;') ? '' : $label;
 		$controlAsString = label_cell($value, $params2, $id);
 		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_LABEL, $label, $controlAsString));
 	}
@@ -415,8 +421,8 @@ class InputRendererBootstrap extends \InputRenderer
 		if (! isset($max))
 			$max = $size;
 
-		$class = $submit_on_change ? 'class="form-control searchbox"' : 'form-control';
-		$controlAsString = "<input $class type=\"text\" name=\"$name\" size=\"$size\" maxlength=\"$max\" value=\"" . $_POST[$name] . "\"" . ($title ? " title='$title'" : '') . " >";
+		$class = $submit_on_change ? 'form-control searchbox' : 'form-control';
+		$controlAsString = "<input class=\"$class\" type=\"text\" name=\"$name\" size=\"$size\" maxlength=\"$max\" value=\"" . $_POST[$name] . "\"" . ($title ? " title='$title'" : '') . " >";
 // 		if ($post_label)
 // 			echo " " . $post_label;
 		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_TEXT, $label, $controlAsString));
@@ -542,8 +548,8 @@ class InputRendererBootstrap extends \InputRenderer
 	{
 		if ($id != "")
 			$id = "id='$id'";
-		$controlAsString = "<input type='file' class='form-control' name='$name' $id />";
-		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_TEXT, $label, $controlAsString)); // CONTROL_FILE? CP 2014-11
+		$controlAsString = "<input type='file' name='$name' $id />";
+		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_FILE, $label, $controlAsString));
 	}
 
 	function file_row($label, $name, $id = "")

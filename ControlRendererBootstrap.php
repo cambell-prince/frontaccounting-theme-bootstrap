@@ -9,7 +9,7 @@ class ControlRendererBootstrap extends \ControlRenderer
 	{
 		// $dummy - left for compatibility with 2.0 API
 		$context = array(
-			'name' => ($name != '') ? "name='$name'" : '',
+			'name' => ($name != '') ? $name : '',
 			'action' => ($action != '') ? $action : $_SERVER['PHP_SELF'],
 			'multi' => $multi,
 		);
@@ -22,12 +22,13 @@ class ControlRendererBootstrap extends \ControlRenderer
 		global $Ajax;
 
 		$_SESSION['csrf_token'] = hash('sha256', uniqid(mt_rand(), true));
-		if ($breaks)
-			br($breaks);
+// 		if ($breaks)
+// 			br($breaks);
 		hidden('_focus');
 		hidden('_modified', get_post('_modified', 0));
 		hidden('_token', $_SESSION['csrf_token']);
 
+		View::get()->render(); // In case there are any controls between the end of table and the end of form.
 		echo ThemeBootstrap::get()->renderBlock('controls.twig.html', 'form_end', array());
 
 		$Ajax->activate('_token');

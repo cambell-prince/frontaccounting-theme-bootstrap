@@ -50,6 +50,7 @@ class View
 	const CONTROL_ARRAY = 'array'; // @see array_selector
 	const CONTROL_HIDDEN = 'hidden';
 	const CONTROL_LABEL = 'label';
+	const CONTROL_FILE = 'file';
 
 	private $controls;
 	private $rowCount;
@@ -137,6 +138,9 @@ class View
 
 	public function render()
 	{
+		if (count($this->controls) == 0) {
+			return;
+		}
 		switch ($this->layout) {
 			case self::LAYOUT_FORM2COL:
 				$columns = array();

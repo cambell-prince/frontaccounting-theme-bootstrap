@@ -43,7 +43,7 @@ class renderer
 		global $path_to_root, $help_base_url, $db_connections;
 		if (! $no_menu) {
 			$context = array();
-			$context['theme_path'] = ThemeBootstrap::THEME_PATH;
+			$context['themePath'] = $path_to_root . '/themes/' . user_theme();
 			$context['selected_application'] = $_SESSION['sel_app'];
 			$context['applications'] = array();
 			$local_path_to_root = $path_to_root;

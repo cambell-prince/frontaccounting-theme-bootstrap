@@ -10,24 +10,8 @@
 </form>
 {% endblock form_end %}
 
-{% block table %}
-<center><table class="{{ class }}" {{ extra }} cellpadding="{{padding}}" cellspacing=""{{spacing}}>
-{% endblock table %}
-
-{% block table_end %}
-</table></center>
-{% endblock table_end %}
-
-{% block table2 %}
-<center><table style="border: 1px solid blue" class="{{ class }}" {{ extra }} cellpadding="{{padding}}" cellspacing=""{{spacing}}>
-{% endblock table2 %}
-
-{% block table2_end %}
-</table></center>
-{% endblock table2_end %}
-
 {% block view_table %}
-<div class="container">
+<div class="container"><!-- layout {{layout}} -->
 <table class="table table-condensed">
 {% for element in controls %}
 {% if element.type == 'header' %}
@@ -55,7 +39,24 @@
 {% endblock view_table %}
 
 {% block view %}
-<div class="container">
+<div class="container"><!-- layout {{layout}} -->
+<div role="form" class="">
+{% for control in controls %}
+	{% if control.type == 'hidden' %}
+	{{ control.controlAsString | raw }}
+	{% else %}
+	<div class="form-group">
+	<label class="control-label">{{ control.label }}</label>
+	{{ control.controlAsString | raw }}
+	</div>
+	{% endif %}
+{% endfor %}
+</div>
+</div>
+{% endblock view %}
+
+{% block view_inline %}
+<div class="container"><!-- layout {{layout}} -->
 <div role="form" class="form-inline">
 {% for control in controls %}
 	{% if control.type == 'check' %}
@@ -68,17 +69,17 @@
 	{{ control.controlAsString | raw }}
 	{% else %}
 	<div class="form-group">
-	<label class="col-sm-3 control-label">{{ control.label }}</label>
+	<label class="control-label">{{ control.label }}</label>
 	{{ control.controlAsString | raw }}
 	</div>
 	{% endif %}
 {% endfor %}
 </div>
 </div>
-{% endblock view %}
+{% endblock view_inline %}
 
 {% block view_1col_vertical %}
-<div role="form" class="well">
+<div role="form" class="well"><!-- layout {{layout}} -->
 {% for control in controls %}
 	{% if control.type == 'check' %}
 	<div class="checkbox">
@@ -101,7 +102,7 @@
 {% endblock view_1col_vertical %}
 
 {% block view_1col_horizontal %}
-<div role="form" class="container form-horizontal"><!-- {{ layout }} -->
+<div role="form" class="container form-horizontal"><!-- layout {{layout}} -->
 {% for control in controls %}
 	{% if control.type == 'check' %}
 	<div class="form-group">
@@ -141,7 +142,7 @@
 {% endblock view_1col_horizontal %}
 
 {% block view_2col %}
-<div class="container"><!-- {{layout}} -->
+<div class="container"><!-- layout {{layout}} -->
 <div role="form" class="form-horizontal">
 <div class="row">
 {% for column in columns %}
@@ -189,7 +190,7 @@
 {% endblock view_2col %}
 
 {% block view_3col %}
-<div class="container"><!-- {{layout}} -->
+<div class="container"><!-- layout {{layout}} -->
 <div role="form" class="form-horizontal">
 <div class="row">
 {% for column in columns %}
@@ -237,7 +238,7 @@
 {% endblock view_3col %}
 
 {% block tabs %}
-<div class="container">
+<div class="container"><!-- tabs -->
 <ul class="ajaxtabs nav nav-tabs" role="tablist" rel="{{ divID }}">
 	{% for tab in tabs %}
 	<li role="presentation" {% if tab.isActive %} class="active" {% endif%}><button type="submit" name="{{ tab.name }}" {{ tab.accessKey}} {{ tab.disabled }}>{{ tab.text | raw }}</button></li>

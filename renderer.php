@@ -61,25 +61,21 @@ class renderer
 				}
 			}
 
-			$navbar = ThemeBootstrap::get()->render('nav.twig.html', $context);
-			echo $navbar;
+			$navBar = ThemeBootstrap::get()->render('nav.twig.html', $context);
+			echo $navBar;
 
 			// top status bar
-			$img = "<img src='$local_path_to_root/themes/default/images/login.gif' width='14' height='14' border='0' alt='" . _('Logout') . "'>&nbsp;&nbsp;";
-			$himg = "<img src='$local_path_to_root/themes/default/images/help.gif' width='14' height='14' border='0' alt='" . _('Help') . "'>&nbsp;&nbsp;";
-			echo "<table class=logoutBar>";
-			echo "<tr><td class=headingtext3>" . $db_connections[$_SESSION["wa_current_user"]->company]["name"] . " | " . $_SERVER['SERVER_NAME'] . " | " . $_SESSION["wa_current_user"]->name . "</td>";
-			$indicator = "$path_to_root/themes/" . user_theme() . "/images/ajax-loader.gif";
-			echo "<td class='logoutBarRight'><img id='ajaxmark' src='$indicator' align='center' style='visibility:hidden;'></td>";
-			echo "  <td class='logoutBarRight'><a class='shortcut' href='$path_to_root/admin/display_prefs.php?'>" . _("Preferences") . "</a>&nbsp;&nbsp;&nbsp;\n";
-			echo "  <a class='shortcut' href='$path_to_root/admin/change_current_user_password.php?selected_id=" . $_SESSION["wa_current_user"]->username . "'>" . _("Change password") . "</a>&nbsp;&nbsp;&nbsp;\n";
+			$context = array(
+				'rootPath' => $local_path_to_root,
+				'companyName' => $db_connections[$_SESSION["wa_current_user"]->company]["name"],
+				'serverName' => $_SERVER['SERVER_NAME'],
+				'userDisplayName' => $_SESSION["wa_current_user"]->name,
+				'userName' => $_SESSION["wa_current_user"]->username,
+				'ajaxIndicator' => "$path_to_root/themes/" . user_theme() . "/images/ajax-loader.gif",
 
-			if ($help_base_url != null) {
-				echo "$himg<a target = '_blank' onclick=" . '"' . "javascript:openWindow(this.href,this.target); return false;" . '" ' . "href='" . help_url() . "'>" . _("Help") . "</a>&nbsp;&nbsp;&nbsp;";
-			}
-			echo "$img<a class='shortcut' href='$local_path_to_root/access/logout.php?'>" . _("Logout") . "</a>&nbsp;&nbsp;&nbsp;";
-			echo "</td></tr><tr><td colspan=3>";
-			echo "</td></tr></table>";
+			);
+			$statusBar = ThemeBootstrap::get()->renderBlock('page.twig.html', 'status', $context);
+			echo $statusBar;
 		}
 // 		echo "</td></tr></table>";
 
@@ -95,7 +91,7 @@ class renderer
 		global $version, $allow_demo_mode, $app_title, $power_url, $power_by, $path_to_root, $Pagehelp, $Ajax;
 		include_once ($path_to_root . "/includes/date_functions.inc");
 
-		echo "</td></tr></table>\n"; // 'main_page'
+// 		echo "</td></tr></table>\n"; // 'main_page'
 		if ($no_menu == false) 		// bottom status line
 		{
 			if ($is_index)
@@ -111,8 +107,8 @@ class renderer
 			}
 			echo "</td></tr></table>\n";
 		}
-		echo "</td></tr> </table>\n"; // 'callout_main'
-		echo "</table>\n";
+// 		echo "</td></tr> </table>\n"; // 'callout_main'
+// 		echo "</table>\n";
 		if ($no_menu == false) {
 			echo "<table align='center' id='footer'>\n";
 			echo "<tr>\n";

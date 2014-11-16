@@ -59,25 +59,26 @@ class TableCell
 class View
 {
 
-	const LAYOUT_UNKNOWN = 'unknown';
-	const LAYOUT_INLINE = 'form-inline';
+	const LAYOUT_UNKNOWN  = 'unknown';
+	const LAYOUT_HIDDEN   = 'hidden';
+	const LAYOUT_INLINE   = 'inline';
 	const LAYOUT_FORM1COL = 'form1';
 	const LAYOUT_FORM2COL = 'form2';
 	const LAYOUT_FORM3COL = 'form3';
-	const LAYOUT_TABLE = 'table';
+	const LAYOUT_TABLE    = 'table';
 
-	const CONTROL_HEADING = 'heading';
-	const CONTROL_TEXT = 'text';
+	const CONTROL_HEADING  = 'heading';
+	const CONTROL_TEXT     = 'text';
 	const CONTROL_TEXTAREA = 'textarea';
-	const CONTROL_CHECK = 'check';
-	const CONTROL_RADIO = 'radio';
-	const CONTROL_COMBO = 'combo';
+	const CONTROL_CHECK    = 'check';
+	const CONTROL_RADIO    = 'radio';
+	const CONTROL_COMBO    = 'combo';
 	const CONTROL_CALENDAR = 'calendar';
-	const CONTROL_BUTTON = 'button';
-	const CONTROL_ARRAY = 'array'; // @see array_selector
-	const CONTROL_HIDDEN = 'hidden';
-	const CONTROL_LABEL = 'label';
-	const CONTROL_FILE = 'file';
+	const CONTROL_BUTTON   = 'button';
+	const CONTROL_ARRAY    = 'array'; // @see array_selector
+	const CONTROL_HIDDEN   = 'hidden';
+	const CONTROL_LABEL    = 'label';
+	const CONTROL_FILE     = 'file';
 
 	private $controls;
 	private $rowCount;
@@ -176,6 +177,10 @@ class View
 		if ($this->layout == self::LAYOUT_TABLE) {
 			$this->tableAddCell($control->controlAsString);
 			return;
+		} elseif ($this->layout == self::LAYOUT_UNKNOWN) {
+			if ($control->type != self::CONTROL_HIDDEN) {
+				$this->layout = self::LAYOUT_INLINE;
+			}
 		}
 		$control->column = $this->column;
 		$this->controls[] = $control;
@@ -290,6 +295,14 @@ class View
 					'layout' => $this->layout
 				);
 				echo ThemeBootstrap::get()->renderBlock('controls.twig.html', 'view_1col_horizontal', $context);
+				break;
+
+			case self::LAYOUT_INLINE:
+				$context = array(
+					'controls' => $this->controls,
+					'layout' => $this->layout
+				);
+				echo ThemeBootstrap::get()->renderBlock('controls.twig.html', 'view_inline', $context);
 				break;
 
 			default:

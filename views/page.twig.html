@@ -1,0 +1,15 @@
+{% block status %}
+<div id="status" class="container">
+	<div class="row">
+		<div class="col-sm-4">{{companyName}} | {{serverName}} | {{userDisplayName}}</div>
+		<div class="col-sm-4 text-center">
+			<i id="ajaxmark" class="fa fa-lg fa-circle-o-notch fa-spin" style="visibility: hidden"></i>
+		</div>
+		<div class="col-sm-4 pull-right text-right">
+			<a class='shortcut' href='{{rootPath}}/admin/display_prefs.php?'>{{"Preferences"|localize}}</a>&nbsp;&nbsp;&nbsp;
+			<a class='shortcut' href='{{rootPath}}/admin/change_current_user_password.php?selected_id={{userName}}'>{{"Change password"|localize}}</a>&nbsp;&nbsp;&nbsp;
+			<a class='shortcut' href='{{rootPath}}/access/logout.php?'>{{"Logout"|localize}}</a>&nbsp;&nbsp;&nbsp;
+		</div>
+	</div>
+</div>
+{% endblock status %}

@@ -14,6 +14,11 @@ class ThemeBootstrap
 // 			'cache' => __DIR__ . '/cache'
 			'cache' => false
 		));
+		// Translation Filter
+		$filter = new \Twig_SimpleFilter('localize', function($string) {
+			return _($string);
+		});
+		$this->twig->addFilter($filter);
 	}
 
 	public static function get()

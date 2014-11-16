@@ -1,15 +1,26 @@
 {% block status %}
 <div id="status" class="container">
 	<div class="row">
-		<div class="col-sm-4">{{companyName}} | {{serverName}} | {{userDisplayName}}</div>
-		<div class="col-sm-4 text-center">
+		<div class="col-xs-5">{{companyName}} | {{serverName}} | {{userDisplayName}}</div>
+		<div class="col-xs-1 text-center">
 			<i id="ajaxmark" class="fa fa-lg fa-circle-o-notch fa-spin" style="visibility: hidden"></i>
 		</div>
-		<div class="col-sm-4 pull-right text-right">
+		<div class="col-xs-6 pull-right text-right">
 			<a class='shortcut' href='{{rootPath}}/admin/display_prefs.php?'>{{"Preferences"|localize}}</a>&nbsp;&nbsp;&nbsp;
-			<a class='shortcut' href='{{rootPath}}/admin/change_current_user_password.php?selected_id={{userName}}'>{{"Change password"|localize}}</a>&nbsp;&nbsp;&nbsp;
-			<a class='shortcut' href='{{rootPath}}/access/logout.php?'>{{"Logout"|localize}}</a>&nbsp;&nbsp;&nbsp;
+			<a class='shortcut'
+				href='{{rootPath}}/admin/change_current_user_password.php?selected_id={{userName}}'>{{"Change
+				password"|localize}}</a>&nbsp;&nbsp;&nbsp; <a class='shortcut'
+				href='{{rootPath}}/access/logout.php?'>{{"Logout"|localize}}</a>&nbsp;&nbsp;&nbsp;
 		</div>
 	</div>
 </div>
 {% endblock status %}
+
+{% block footer %}
+<footer class="footer">
+	<div class="container">
+		<p class="text-muted">{{date}} | {{time}} Bootstrap theme for FrontAccounting by <a href="https://github.com/cambell-prince/frontaccounting-theme-bootstrap/issues">Cambell Prince</a></p>
+	</div>
+</footer>
+
+{% endblock footer %}

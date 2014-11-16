@@ -61,3 +61,25 @@ i.fa-times {
  #status.container {
  	margin-bottom: 9px; //15 (navbar bottom margin) - 6 (top margin of inline form)
  }
+ 
+/*
+ * Sticky footer
+ */
+html {
+	position: relative;
+	min-height: 100%;
+}
+
+@footer-height: 60px;
+body {
+	margin-bottom: @footer-height;
+}
+
+.footer {
+	position: absolute;
+	bottom: 0;
+	width: 100%;
+	height: @footer-height;
+	background-color: @gray-lighter;
+}
+

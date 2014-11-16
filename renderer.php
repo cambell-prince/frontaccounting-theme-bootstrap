@@ -91,40 +91,15 @@ class renderer
 		global $version, $allow_demo_mode, $app_title, $power_url, $power_by, $path_to_root, $Pagehelp, $Ajax;
 		include_once ($path_to_root . "/includes/date_functions.inc");
 
-// 		echo "</td></tr></table>\n"; // 'main_page'
-		if ($no_menu == false) 		// bottom status line
-		{
-			if ($is_index)
-				echo "<table class=bottomBar>\n";
-			else
-				echo "<table class=bottomBar2>\n";
-			echo "<tr>";
-			if (isset($_SESSION['wa_current_user'])) {
-				$phelp = implode('; ', $Pagehelp);
-				echo "<td class=bottomBarCell>" . Today() . " | " . Now() . "</td>\n";
-				$Ajax->addUpdate(true, 'hotkeyshelp', $phelp);
-				echo "<td id='hotkeyshelp'>" . $phelp . "</td>";
-			}
-			echo "</td></tr></table>\n";
-		}
-// 		echo "</td></tr> </table>\n"; // 'callout_main'
-// 		echo "</table>\n";
+		$context = array(
+			'isIndex' => $is_index,
+			'date' => Today(),
+			'time' => Now(),
+		);
+
 		if ($no_menu == false) {
-			echo "<table align='center' id='footer'>\n";
-			echo "<tr>\n";
-			echo "<td align='center' class='footer'><a target='_blank' href='$power_url' tabindex='-1'><font color='#ffffff'>$app_title $version - " . _("Theme:") . " " . user_theme() . " - " . show_users_online() . "</font></a></td>\n";
-			echo "</tr>\n";
-			echo "<tr>\n";
-			echo "<td align='center' class='footer'><a target='_blank' href='$power_url' tabindex='-1'><font color='#ffff00'>$power_by</font></a></td>\n";
-			echo "</tr>\n";
-			if ($allow_demo_mode == true) {
-				echo "<tr>\n";
-				// echo "<td><br><div align='center'><a href='http://sourceforge.net'><img
-				// src='http://sourceforge.net/sflogo.php?group_id=89967&amp;type=5' alt='SourceForge.net Logo'
-				// width='210' height='62' border='0' align='middle' /></a></div></td>\n";
-				echo "</tr>\n";
-			}
-			echo "</table><br><br>\n";
+			$footer = ThemeBootstrap::get()->renderBlock('page.twig.html', 'footer', $context);
+			echo $footer;
 		}
 	}
 

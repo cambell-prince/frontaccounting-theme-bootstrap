@@ -721,15 +721,14 @@ class InputRendererBootstrap extends \InputRenderer
 	{
 		global $Ajax;
 
-		$name = "Inactive" . $id;
-		$value = $value ? 1 : 0;
-
 		if (check_value('show_inactive')) {
+			$name = "Inactive" . $id;
+			$value = $value ? 1 : 0;
 			if (isset($_POST['LInact'][$id]) && (get_post('_Inactive' . $id . '_update') || get_post('Update')) && (check_value('Inactive' . $id) != $value)) {
 				update_record_status($id, ! $value, $table, $key);
 			}
-			// TODO Fix these td. CP 2014-11
-			echo '<td align="center">' . checkbox(null, $name, $value, true, '') . hidden("LInact[$id]", $value, false) . '</td>';
+			$cellAsString = checkbox(null, $name, $value, true, '') . hidden("LInact[$id]", $value, false);
+			View::get()->tableAddCell($cellAsString);
 		}
 	}
 	//
@@ -737,7 +736,10 @@ class InputRendererBootstrap extends \InputRenderer
 	//
 	function inactive_control_row($th)
 	{
-		echo "<tr><td colspan=" . (count($th)) . ">" . "<div style='float:left;'>" . checkbox(null, 'show_inactive', null, true) . _("Show also Inactive") . "</div><div style='float:right;'>" . submit('Update', _('Update'), false, '', null) . "</div></td></tr>";
+		$cellAsString = "<div style='float:left;'>" . checkbox(null, 'show_inactive', null, true) . _("Show also Inactive") . "</div><div style='float:right;'>" . submit('Update', _('Update'), false, '', null) . "</div>";
+		View::get()->tableRowStart();
+		View::get()->tableAddCellSpanningColumns($cellAsString, count($th));
+		View::get()->tableRowEnd();
 	}
 	//
 	// Inserts additional column header when display of inactive records is on.

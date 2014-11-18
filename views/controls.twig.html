@@ -27,7 +27,7 @@
 {% for row in element.content %}
 <tr>
 {% for cell in row.content %}
-<td>{{ cell.content | raw }}</td>
+<td{% if cell.columnSpan > 0 %} colspan="{{cell.columnSpan}}"{% endif %}>{{ cell.content | raw }}</td>
 {% endfor %}
 </tr>
 {% endfor %}

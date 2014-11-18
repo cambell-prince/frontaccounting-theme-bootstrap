@@ -51,6 +51,8 @@ class TableCell
 {
 	public $content;
 
+	public $columnSpan;
+
 	public function __construct($content) {
 		$this->content = $content;
 	}
@@ -218,6 +220,13 @@ class View
 	public function tableAddCell($cellAsString)
 	{
 		$this->currentTableRow->content[] = new TableCell($cellAsString);
+	}
+
+	public function tableAddCellSpanningColumns($cellAsString, $columnSpan)
+	{
+		$tableCell = new TableCell($cellAsString);
+		$tableCell->columnSpan = $columnSpan;
+		$this->currentTableRow->content[] = $tableCell;
 	}
 
 	public function tableEnd()

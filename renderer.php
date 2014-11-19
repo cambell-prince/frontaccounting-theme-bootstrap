@@ -116,6 +116,7 @@ class renderer
 			return;
 		}
 
+		echo "<div class=\"container\">";
 		echo "<table width=100% cellpadding='0' cellspacing='0'>";
 		foreach ($selected_app->modules as $module) {
 			if (! $_SESSION["wa_current_user"]->check_module_access($module))
@@ -159,6 +160,7 @@ class renderer
 			echo "</tr></table></td></tr>";
 		}
 		echo "</table>";
+		echo "</div>";
 	}
 }
 ?>

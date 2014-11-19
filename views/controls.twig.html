@@ -38,6 +38,19 @@
 </div>
 {% endblock view_table %}
 
+{% block pager %}
+	<div class="container">
+		<nav>
+			<ul class="pagination">
+				<li>{{first | raw}}</li>
+				<li>{{previous | raw}}</li>
+				<li>{{next | raw}}</li>
+				<li>{{last | raw}}</li>
+			</ul>
+		</nav>
+	</div>
+{% endblock pager %}
+
 {% block view %}
 <div class="container"><!-- layout {{layout}} -->
 <div role="form" class="">

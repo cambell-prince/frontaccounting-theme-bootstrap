@@ -81,6 +81,7 @@ class View
 	const CONTROL_HIDDEN   = 'hidden';
 	const CONTROL_LABEL    = 'label';
 	const CONTROL_FILE     = 'file';
+	const CONTROL_LINK     = 'link';
 
 	private $controls;
 	private $rowCount;
@@ -98,6 +99,8 @@ class View
 		$this->rowCount = 0;
 		$this->layout = self::LAYOUT_UNKNOWN;
 		$this->column = 1;
+		$this->currentTableRow = null;
+		$this->currentTableBody = null;
 	}
 
 	/**
@@ -167,7 +170,7 @@ class View
 			$this->layout = self::LAYOUT_FORM3COL;
 			$this->column = 3;
 		} elseif ($columnNumber > 3) {
-			throw new \Exception('More than 2 columns is not supported');
+			throw new \Exception('More than 3 columns is not supported');
 		}
 	}
 
@@ -194,6 +197,8 @@ class View
 		$tableElement = new TableElement(TableElement::TE_HEADER);
 		$tableElement->content = $cells;
 		$this->controls[] = $tableElement;
+		$this->currentTableBody = null;
+		$this->currentTableRow = null;
 	}
 
 	public function tableRowStart()
@@ -201,6 +206,7 @@ class View
 		if (!$this->layout == self::LAYOUT_TABLE) {
 			return;
 		}
+		$this->tableEnsureHasBody();
 		$this->currentTableRow = new TableElement(TableElement::TE_ROW);
 	}
 
@@ -209,7 +215,7 @@ class View
 		if (!$this->layout == self::LAYOUT_TABLE) {
 			return;
 		}
-		if (!isset($this->currentTableBody)) {
+		if (!$this->currentTableBody) {
 			$this->currentTableBody = new TableElement(TableElement::TE_BODY);
 			$this->controls[] = $this->currentTableBody;
 		}
@@ -217,8 +223,25 @@ class View
 		$this->currentTableRow = null;
 	}
 
+	private function tableEnsureHasBody()
+	{
+		if (! $this->currentTableBody) {
+			$this->currentTableBody = new TableElement(TableElement::TE_BODY);
+			$this->controls[] = $this->currentTableBody;
+		}
+	}
+
+	private function tableEnsureHasRow()
+	{
+		if (!$this->currentTableRow) {
+			$this->tableEnsureHasBody();
+			$this->currentTableRow = new TableElement(TableElement::TE_ROW);
+		}
+	}
+
 	public function tableAddCell($cellAsString)
 	{
+		$this->tableEnsureHasRow();
 		$this->currentTableRow->content[] = new TableCell($cellAsString);
 	}
 

@@ -515,7 +515,7 @@ class InputRendererBootstrap extends \InputRenderer
 		}
 		if ($use_date_picker) {
 			$calc_image = (file_exists("$path_to_root/themes/" . user_theme() . "/images/cal.gif")) ? "$path_to_root/themes/" . user_theme() . "/images/cal.gif" : "$path_to_root/themes/default/images/cal.gif";
-			$post_label = "<a tabindex='-1' href=\"javascript:date_picker(document.getElementsByName('$name')[0]);\">" . "	<img src='$calc_image' width='16' height='16' border='0' alt='" . _('Click Here to Pick up the date') . "'></a>\n";
+			$post_label = "<a tabindex='-1' href=\"javascript:date_picker(document.getElementsByName('$name')[0]);\">" . "	<img src='$calc_image' width='15' height='15' border='0' alt='" . _('Click Here to Pick up the date') . "'></a>\n";
 		} else
 			$post_label = "";
 
@@ -528,8 +528,11 @@ class InputRendererBootstrap extends \InputRenderer
 		default_focus($name);
 		$size = (user_date_format() > 3) ? 11 : 10;
 
-		$controlAsString = "<input type=\"text\" name=\"$name\" class=\"$class\" $aspect size=\"$size\" maxlength=\"12\" value=\"" . $_POST[$name] . "\"" . ($title ? " title='$title'" : '') . " > $post_label";
-		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_TEXT, $label, $controlAsString)); // CONTROL_DATE? CP 2014-11
+		$controlAsString = "<div class=\"input-group\">"
+			. "<input type=\"text\" name=\"$name\" class=\"$class\" $aspect size=\"$size\" maxlength=\"12\" value=\"" . $_POST[$name] . "\"" . ($title ? " title='$title'" : '') . " > "
+			. "<span class=\"input-group-addon\">$post_label</span>"
+			. "</div>";
+		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_DATE, $label, $controlAsString)); // CONTROL_DATE? CP 2014-11
 
 		$Ajax->addUpdate($name, $name, $_POST[$name]);
 	}

@@ -2,6 +2,8 @@
 
 This project provides a [Bootstrap 3](http://getbootstrap.com/) theme for [FrontAccounting](http://frontaccounting.com/).
 
+The theme is intentionally minimalist, following the default Bootstrap 3 theme.  This provides a nice base for developing a range of more appealing themes.
+
 ## Demo Site 
 
 The easiest way to have a look at the theme is to browse the [demo site](http://demo.saygoweb.com/frontaccounting/).
@@ -17,10 +19,8 @@ Up to the minute status can be found on our [Trello board](https://trello.com/b/
 
 * Some controls take up the full width of the screen when they should remain inside the 'container' area. e.g. Bank Deposit and Bank Payment.
 * Sales | Direct Invoice doesn't work
-* Date controls need to look better.
 * New Journal has issues.
 * Drill down reports don't work.
-
 
 ## Installation
 

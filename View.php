@@ -75,7 +75,7 @@ class View
 	const CONTROL_CHECK    = 'check';
 	const CONTROL_RADIO    = 'radio';
 	const CONTROL_COMBO    = 'combo';
-	const CONTROL_CALENDAR = 'calendar';
+	const CONTROL_DATE     = 'date';
 	const CONTROL_BUTTON   = 'button';
 	const CONTROL_ARRAY    = 'array'; // @see array_selector
 	const CONTROL_HIDDEN   = 'hidden';

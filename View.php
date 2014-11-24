@@ -97,6 +97,7 @@ class View
 	const LAYOUT_FORM1COL = 'form1';
 	const LAYOUT_FORM2COL = 'form2';
 	const LAYOUT_FORM3COL = 'form3';
+	const LAYOUT_FORM4COL = 'form4';
 	const LAYOUT_TABLE    = 'table';
 
 	const CONTROL_HEADING  = 'heading';
@@ -219,8 +220,11 @@ class View
 		} elseif ($columnNumber == 3) {
 			$this->layout = self::LAYOUT_FORM3COL;
 			$this->column = 3;
-		} elseif ($columnNumber > 3) {
-			throw new \Exception('More than 3 columns is not supported');
+		} elseif ($columnNumber == 4) {
+			$this->layout = self::LAYOUT_FORM4COL;
+			$this->column = 4;
+		} elseif ($columnNumber > 4) {
+			throw new \Exception('More than 4 columns is not supported');
 		}
 	}
 
@@ -326,6 +330,7 @@ class View
 			case self::LAYOUT_FORM1COL:
 			case self::LAYOUT_FORM2COL:
 			case self::LAYOUT_FORM3COL:
+			case self::LAYOUT_FORM4COL:
 				$columns = array();
 				for ($i = 0; $i < $this->column; $i++) {
 					$columns[$i] = array(

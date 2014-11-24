@@ -114,71 +114,31 @@
 </div>
 {% endblock view_1col_vertical %}
 
-{% block view_1col_horizontal %}
-<div role="form" class="container form-horizontal"><!-- layout {{layout}} -->
-{% for control in controls %}
-	{% if control.type == 'check' %}
-	<div class="form-group">
-	<label class="col-sm-2">{{ control.label }}</label>
-	<div class="col-sm-5">
-	{{ control.controlAsString | raw }}
-	</div>
-	</div>
-	{% elseif control.type == 'label' %}
-	<div class="form-group">
-	<label class="col-sm-2 control-label">{{ control.label }}</label>
-	<div class="col-sm-5">
-	<p class="form-control-static">{{ control.controlAsString | raw }}</p>
-	</div>
-	</div>
-	{% elseif control.type == 'file' %}
-	<div class="form-group">
-	<label class="col-sm-2">{{ control.label }}</label>
-	<div class="col-sm-5">
-	{{ control.controlAsString | raw }}
-	</div>
-	</div>
-	{% elseif control.type == 'heading' %}
-	<h4 class="col-sm-12">{{ control.label }}</h4>
-	{% elseif control.type == 'hidden' %}
-	{{ control.controlAsString | raw }}
-	{% else %}
-	<div class="form-group">
-	<label class="col-sm-2 control-label">{{ control.label }}</label>
-	<div class="col-sm-5">
-	{{ control.controlAsString | raw }}
-	</div>
-	</div>
-	{% endif %}
-{% endfor %}
-</div>
-{% endblock view_1col_horizontal %}
-
-{% block view_2col %}
+{% block view_Ncol %}
 <div class="container"><!-- layout {{layout}} -->
 <div role="form" class="form-horizontal">
 <div class="row">
 {% for column in columns %}
-<div class="col-sm-6">
+<div class="{{ column.columnClass }}">
 {% for control in column.controls %}
 	{% if control.type == 'check' %}
 	<div class="form-group">
-	<label class="col-sm-5">{{ control.label }}</label>
-	<div class="col-sm-7">
+	<label class="{{column.labelClass}}">{{ control.label }}</label>
+	<div class="{{column.controlClass}}">
 	{{ control.controlAsString | raw }}
 	</div>
 	</div>
 	{% elseif control.type == 'label' %}
 	<div class="form-group">
-	<label class="col-sm-5 control-label">{{ control.label }}</label>
-	<div class="col-sm-7">
+	<label class="{{column.labelClass}} control-label">{{ control.label }}</label>
+	<div class="{{column.controlClass}}">
 	<p class="form-control-static">{{ control.controlAsString | raw }}</p>
 	</div>
 	</div>
 	{% elseif control.type == 'file' %}
 	<div class="form-group">
-	<label class="col-sm-5">{{ control.label }}</label>
-	<div class="col-sm-7">
+	<label class="{{column.labelClass}}">{{ control.label }}</label>
+	<div class="{{column.controlClass}}">
 	{{ control.controlAsString | raw }}
 	</div>
 	</div>
@@ -188,8 +148,8 @@
 	{{ control.controlAsString | raw }}
 	{% else %}
 	<div class="form-group">
-	<label class="col-sm-5 control-label">{{ control.label }}</label>
-	<div class="col-sm-7">
+	<label class="{{column.labelClass}} control-label">{{ control.label }}</label>
+	<div class="{{column.controlClass}}">
 	{{ control.controlAsString | raw }}
 	</div>
 	</div>
@@ -200,55 +160,7 @@
 </div>
 </div>
 </div>
-{% endblock view_2col %}
-
-{% block view_3col %}
-<div class="container"><!-- layout {{layout}} -->
-<div role="form" class="form-horizontal">
-<div class="row">
-{% for column in columns %}
-<div class="{{ column.class }}">
-{% for control in column.controls %}
-	{% if control.type == 'check' %}
-	<div class="form-group">
-	<label class="col-sm-4">{{ control.label }}</label>
-	<div class="col-sm-8">
-	{{ control.controlAsString | raw }}
-	</div>
-	</div>
-	{% elseif control.type == 'label' %}
-	<div class="form-group">
-	<label class="col-sm-4 control-label">{{ control.label }}</label>
-	<div class="col-sm-8">
-	<p class="form-control-static">{{ control.controlAsString | raw }}</p>
-	</div>
-	</div>
-	{% elseif control.type == 'file' %}
-	<div class="form-group">
-	<label class="col-sm-4">{{ control.label }}</label>
-	<div class="col-sm-8">
-	{{ control.controlAsString | raw }}
-	</div>
-	</div>
-	{% elseif control.type == 'heading' %}
-	<h4 class="col-sm-12">{{ control.label }}</h4>
-	{% elseif control.type == 'hidden' %}
-	{{ control.controlAsString | raw }}
-	{% else %}
-	<div class="form-group">
-	<label class="col-sm-4 control-label">{{ control.label }}</label>
-	<div class="col-sm-8">
-	{{ control.controlAsString | raw }}
-	</div>
-	</div>
-	{% endif %}
-{% endfor %}
-</div>
-{% endfor %}
-</div>
-</div>
-</div>
-{% endblock view_3col %}
+{% endblock view_Ncol %}
 
 {% block tabs %}
 <div class="container"><!-- tabs -->

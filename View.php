@@ -30,6 +30,36 @@ class Control
 
 }
 
+class ColumnDefinition
+{
+	/**
+	 * @var string
+	 */
+	public $columnClass;
+
+	/**
+	 * @var string
+	 */
+	public $labelClass;
+
+	/**
+	 * @var string
+	 */
+	public $controlClass;
+
+	/**
+	 * @param string $columnClass
+	 * @param string $labelClass
+	 * @param string $controlClass
+	 */
+	public function __construct($columnClass, $labelClass, $controlClass)
+	{
+		$this->columnClass = $columnClass;
+		$this->labelClass = $labelClass;
+		$this->controlClass = $controlClass;
+	}
+}
+
 class TableElement
 {
 	const TE_HEADER = 'header';
@@ -85,11 +115,31 @@ class View
 
 	private $controls;
 	private $rowCount;
+
+	/**
+	 * @see LAYOUT_ constants
+	 * @var string
+	 */
 	private $layout;
+
+	/**
+	 * @var int
+	 */
 	private $column;
+
+	/**
+	 * @var array<ColumnDefinition>
+	 */
+	private $columnDefinition;
 
 	private function __construct()
 	{
+		$this->columnDefinition = array(
+			new ColumnDefinition('col-sm-12', 'col-sm-2', 'col-sm-5'),
+			new ColumnDefinition('col-sm-6',  'col-sm-5', 'col-sm-7'),
+			new ColumnDefinition('col-sm-4',  'col-sm-4', 'col-sm-8'),
+			new ColumnDefinition('col-sm-3',  'col-sm-4', 'col-sm-8'),
+		);
 		$this->reset();
 	}
 
@@ -203,7 +253,7 @@ class View
 
 	public function tableRowStart()
 	{
-		if (!$this->layout == self::LAYOUT_TABLE) {
+		if ($this->layout != self::LAYOUT_TABLE) {
 			return;
 		}
 		$this->tableEnsureHasBody();
@@ -212,7 +262,7 @@ class View
 
 	public function tableRowEnd()
 	{
-		if (!$this->layout == self::LAYOUT_TABLE) {
+		if ($this->layout != self::LAYOUT_TABLE) {
 			return;
 		}
 		if (!$this->currentTableBody) {
@@ -225,6 +275,9 @@ class View
 
 	private function tableEnsureHasBody()
 	{
+		if ($this->layout != self::LAYOUT_TABLE) {
+			return;
+		}
 		if (! $this->currentTableBody) {
 			$this->currentTableBody = new TableElement(TableElement::TE_BODY);
 			$this->controls[] = $this->currentTableBody;
@@ -233,6 +286,9 @@ class View
 
 	private function tableEnsureHasRow()
 	{
+		if ($this->layout != self::LAYOUT_TABLE) {
+			return;
+		}
 		if (!$this->currentTableRow) {
 			$this->tableEnsureHasBody();
 			$this->currentTableRow = new TableElement(TableElement::TE_ROW);
@@ -267,42 +323,18 @@ class View
 			return;
 		}
 		switch ($this->layout) {
+			case self::LAYOUT_FORM1COL:
 			case self::LAYOUT_FORM2COL:
-				$columns = array();
-				$columns[0] = array(
-					'controls' => array()
-				);
-				$columns[1] = array(
-					'controls' => array()
-				);
-				foreach ($this->controls as $control) {
-					if ($control->column == 1) {
-						$columns[0]['controls'][] = $control;
-					} else {
-						$columns[1]['controls'][] = $control;
-					}
-				}
-				$context = array(
-					'columns' => $columns,
-					'layout' => $this->layout
-				);
-				echo ThemeBootstrap::get()->renderBlock('controls.twig.html', 'view_2col', $context);
-				break;
-
 			case self::LAYOUT_FORM3COL:
 				$columns = array();
-				$columns[0] = array(
-					'controls' => array(),
-					'class' => 'col-sm-4'
-				);
-				$columns[1] = array(
-					'controls' => array(),
-					'class' => 'col-sm-4'
-				);
-				$columns[2] = array(
-					'controls' => array(),
-					'class' => 'col-sm-4'
-				);
+				for ($i = 0; $i < $this->column; $i++) {
+					$columns[$i] = array(
+						'controls' => array(),
+						'columnClass' => $this->columnDefinition[$this->column - 1]->columnClass,
+						'labelClass' => $this->columnDefinition[$this->column - 1]->labelClass,
+						'controlClass' => $this->columnDefinition[$this->column - 1]->controlClass,
+					);
+				}
 				foreach ($this->controls as $control) {
 					$columns[$control->column - 1]['controls'][] = $control;
 				}
@@ -310,7 +342,7 @@ class View
 					'columns' => $columns,
 					'layout' => $this->layout
 				);
-				echo ThemeBootstrap::get()->renderBlock('controls.twig.html', 'view_3col', $context);
+				echo ThemeBootstrap::get()->renderBlock('controls.twig.html', 'view_Ncol', $context);
 				break;
 
 			case self::LAYOUT_TABLE:
@@ -319,14 +351,6 @@ class View
 					'layout' => $this->layout
 				);
 				echo ThemeBootstrap::get()->renderBlock('controls.twig.html', 'view_table', $context);
-				break;
-
-			case self::LAYOUT_FORM1COL:
-				$context = array(
-					'controls' => $this->controls,
-					'layout' => $this->layout
-				);
-				echo ThemeBootstrap::get()->renderBlock('controls.twig.html', 'view_1col_horizontal', $context);
 				break;
 
 			case self::LAYOUT_INLINE:

@@ -260,11 +260,10 @@ class ListRendererBootstrap extends \ListRenderer
 		}
 		default_focus(($search_box && $by_id) ? $search_box : $name);
 
-// 		if ($search_box && $opts['cells'])
-// 			$str = ($edit_entry != '' ? "<td>$edit_entry</td>" : '') . "<td>$selector</td>";
-// 		else
-			$str = $edit_entry . $selector;
-		return $str;
+		if ($opts['cells']) {
+			return array($edit_entry, $selector);
+		}
+		return $selector;
 	}
 
 	/*
@@ -454,7 +453,7 @@ class ListRendererBootstrap extends \ListRenderer
 		if ($editkey)
 			set_editor('customer', $name, $editkey);
 
-		$ret = combo_input($name, $selected_id, $sql, 'debtor_no', 'debtor_ref', array(
+		$ret = $this->combo_input($name, $selected_id, $sql, 'debtor_no', 'debtor_ref', array(
 			'format' => '_format_add_curr',
 			'order' => array(
 				'debtor_ref'
@@ -475,7 +474,7 @@ class ListRendererBootstrap extends \ListRenderer
 			'show_inactive' => $show_inactive
 		));
 		if ($editkey)
-			$ret .= add_edit_combo('customer');
+			$ret .= $this->add_edit_combo('customer');
 		return $ret;
 	}
 
@@ -526,7 +525,7 @@ class ListRendererBootstrap extends \ListRenderer
 	// ------------------------------------------------------------------------------------------------
 	function customer_branches_list_cells($label, $customer_id, $name, $selected_id = null, $all_option = true, $enabled = true, $submit_on_change = false, $editkey = false)
 	{
-		$controlAsString = customer_branches_list($customer_id, $name, $selected_id, $all_option, $enabled, $submit_on_change, $editkey);
+		$controlAsString = $this->customer_branches_list($customer_id, $name, $selected_id, $all_option, $enabled, $submit_on_change, $editkey);
 		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_COMBO, $label, $controlAsString));
 	}
 
@@ -730,7 +729,7 @@ class ListRendererBootstrap extends \ListRenderer
 		$sql .= " AND !i.inactive AND !s.inactive AND !s.no_sale";
 		$sql .= " GROUP BY i.item_code";
 
-		return combo_input($name, $selected_id, $sql, 'i.item_code', 'c.description', array_merge(array(
+		return $this->combo_input($name, $selected_id, $sql, 'i.item_code', 'c.description', array_merge(array(
 			'format' => '_format_stock_items',
 			'spec_option' => $all_option === true ? _("All Items") : $all_option,
 			'spec_id' => $all_items,
@@ -758,10 +757,11 @@ class ListRendererBootstrap extends \ListRenderer
 		if ($editkey)
 			set_editor('item', $name, $editkey);
 
-		$controlAsString = sales_items_list($name, $selected_id, $all_option, $submit_on_change, '', array(
+		$controls = $this->sales_items_list($name, $selected_id, $all_option, $submit_on_change, '', array(
 			'cells' => true
 		));
-		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_COMBO, $label, $controlAsString));
+		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_TEXT, $label, $controls[0]));
+		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_TEXT, $label, $controls[1]));
 	}
 
 	function sales_kits_list($name, $selected_id = null, $all_option = false, $submit_on_change = false)

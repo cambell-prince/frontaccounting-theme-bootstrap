@@ -329,7 +329,24 @@ class InputRendererBootstrap extends \InputRenderer
 			$params .= " id='$id'";
 			$Ajax->addUpdate($id, $id, $label);
 		}
-		View::get()->tableAddCell($label); // What to do with id? CP 2014-11
+		$attributes = explode(' ', $params);
+		$columnSpan = null;
+		foreach ($attributes as $attribute) {
+			if (strstr($attribute, '=')) {
+				list($key, $value) = explode('=', $attribute);
+				$key = trim($key);
+				$value = trim($value);
+				if ($key == 'colspan') {
+					$columnSpan = $value;
+				}
+			}
+		}
+
+		if ($columnSpan) {
+			View::get()->tableAddCellSpanningColumns($label, $columnSpan);
+		} else {
+			View::get()->tableAddCell($label); // What to do with id? CP 2014-11
+		}
 		return $label;
 	}
 

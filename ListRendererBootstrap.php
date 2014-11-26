@@ -680,8 +680,13 @@ class ListRendererBootstrap extends \ListRenderer
 				'stock_id'
 			)
 		), $opts));
-		if ($editkey)
-			$ret .= add_edit_combo('item');
+		if ($editkey) {
+			if ($opts['cells']) {
+				$ret[1] .= $this->add_edit_combo('item');
+			} else {
+				$ret .= $this->add_edit_combo('item');
+			}
+		}
 		return $ret;
 	}
 
@@ -696,7 +701,8 @@ class ListRendererBootstrap extends \ListRenderer
 			'cells' => true,
 			'show_inactive' => $all
 		), $editkey);
-		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_COMBO, $label, $control));
+		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_TEXT, $label, $control[0]));
+		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_COMBO, '', $control[1]));
 	}
 	/*
 	 * function stock_items_list_row($label, $name, $selected_id=null, $all_option=false, $submit_on_change=false) {

@@ -83,8 +83,14 @@ class TableCell
 
 	public $columnSpan;
 
-	public function __construct($content) {
+	public $type;
+
+	public function __construct($content, $type) {
+		if (!is_string($content)) {
+			throw new \Exception("String expected, '$content' given");
+		}
 		$this->content = $content;
+		$this->type = $type;
 	}
 }
 
@@ -173,6 +179,9 @@ class View
 	 */
 	public static function controlFromRenderedString($type, $label, $controlAsString)
 	{
+		if (!is_string($controlAsString)) {
+			throw new \Exception("Expected string '$controlAsString' given");
+		}
 		$control = new Control($type);
 		$control->label = self::stripColon($label);
 		$control->controlAsString = $controlAsString;
@@ -229,12 +238,31 @@ class View
 	}
 
 	/**
+	 *
+	 * @param array | string $controls
+	 */
+	public function addComboControls($label, $controls) {
+		if (is_array($controls)) {
+			$c = count($controls);
+			if ($c != 2) {
+				throw new \Exception("Unsupported control array size '$c'");
+			}
+			if ($controls[0]) {
+				$this->addControl(View::controlFromRenderedString(self::CONTROL_TEXT, $label, $controls[0]));
+			}
+			$this->addControl(View::controlFromRenderedString(self::CONTROL_COMBO, '', $controls[1]));
+		} else {
+			$this->addControl(View::controlFromRenderedString(self::CONTROL_COMBO, $label, $controls));
+		}
+	}
+
+	/**
 	 * @param Control $control
 	 */
 	public function addControl($control)
 	{
 		if ($this->layout == self::LAYOUT_TABLE) {
-			$this->tableAddCell($control->controlAsString);
+			$this->tableAddCell($control->controlAsString, $control->type);
 			return;
 		} elseif ($this->layout == self::LAYOUT_UNKNOWN) {
 			if ($control->type != self::CONTROL_HIDDEN) {
@@ -299,15 +327,15 @@ class View
 		}
 	}
 
-	public function tableAddCell($cellAsString)
+	public function tableAddCell($cellAsString, $type = self::CONTROL_LABEL)
 	{
 		$this->tableEnsureHasRow();
-		$this->currentTableRow->content[] = new TableCell($cellAsString);
+		$this->currentTableRow->content[] = new TableCell($cellAsString, $type);
 	}
 
 	public function tableAddCellSpanningColumns($cellAsString, $columnSpan)
 	{
-		$tableCell = new TableCell($cellAsString);
+		$tableCell = new TableCell($cellAsString, self::CONTROL_LABEL);
 		$tableCell->columnSpan = $columnSpan;
 		$this->currentTableRow->content[] = $tableCell;
 	}

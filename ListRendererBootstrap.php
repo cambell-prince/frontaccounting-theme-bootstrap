@@ -525,8 +525,8 @@ class ListRendererBootstrap extends \ListRenderer
 	// ------------------------------------------------------------------------------------------------
 	function customer_branches_list_cells($label, $customer_id, $name, $selected_id = null, $all_option = true, $enabled = true, $submit_on_change = false, $editkey = false)
 	{
-		$controlAsString = $this->customer_branches_list($customer_id, $name, $selected_id, $all_option, $enabled, $submit_on_change, $editkey);
-		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_COMBO, $label, $controlAsString));
+		$controls = $this->customer_branches_list($customer_id, $name, $selected_id, $all_option, $enabled, $submit_on_change, $editkey);
+		View::get()->addComboControls($label, $controls);
 	}
 
 	function customer_branches_list_row($label, $customer_id, $name, $selected_id = null, $all_option = true, $enabled = true, $submit_on_change = false, $editkey = false)
@@ -576,8 +576,8 @@ class ListRendererBootstrap extends \ListRenderer
 
 	function currencies_list_cells($label, $name, $selected_id = null, $submit_on_change = false)
 	{
-		$controlAsString = currencies_list($name, $selected_id, $submit_on_change);
-		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_COMBO, $label, $controlAsString));
+		$controls = currencies_list($name, $selected_id, $submit_on_change);
+		View::get()->addComboControls($label, $controls);
 	}
 
 	function currencies_list_row($label, $name, $selected_id = null, $submit_on_change = false)
@@ -608,8 +608,8 @@ class ListRendererBootstrap extends \ListRenderer
 
 	function fiscalyears_list_cells($label, $name, $selected_id = null)
 	{
-		$controlAsString = fiscalyears_list($name, $selected_id);
-		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_COMBO, $label, $controlAsString));
+		$controls = fiscalyears_list($name, $selected_id);
+		View::get()->addComboControls($label, $controls);
 	}
 
 	function fiscalyears_list_row($label, $name, $selected_id = null)
@@ -640,8 +640,8 @@ class ListRendererBootstrap extends \ListRenderer
 
 	function dimensions_list_cells($label, $name, $selected_id = null, $no_option = false, $showname = null, $showclosed = false, $showtype = 0, $submit_on_change = false)
 	{
-		$controlAsString = dimensions_list($name, $selected_id, $no_option, $showname, $submit_on_change, $showclosed, $showtype);
-		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_COMBO, $label, $controlAsString));
+		$controls = dimensions_list($name, $selected_id, $no_option, $showname, $submit_on_change, $showclosed, $showtype);
+		View::get()->addComboControls($label, $controls);
 	}
 
 	function dimensions_list_row($label, $name, $selected_id = null, $no_option = false, $showname = null, $showclosed = false, $showtype = 0, $submit_on_change = false)
@@ -697,12 +697,11 @@ class ListRendererBootstrap extends \ListRenderer
 
 	function stock_items_list_cells($label, $name, $selected_id = null, $all_option = false, $submit_on_change = false, $all = false, $editkey = false)
 	{
-		$control = stock_items_list($name, $selected_id, $all_option, $submit_on_change, array(
+		$controls = stock_items_list($name, $selected_id, $all_option, $submit_on_change, array(
 			'cells' => true,
 			'show_inactive' => $all
 		), $editkey);
-		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_TEXT, $label, $control[0]));
-		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_COMBO, '', $control[1]));
+		View::get()->addComboControls($label, $controls);
 	}
 	/*
 	 * function stock_items_list_row($label, $name, $selected_id=null, $all_option=false, $submit_on_change=false) {
@@ -766,8 +765,7 @@ class ListRendererBootstrap extends \ListRenderer
 		$controls = $this->sales_items_list($name, $selected_id, $all_option, $submit_on_change, '', array(
 			'cells' => true
 		));
-		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_TEXT, $label, $controls[0]));
-		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_TEXT, $label, $controls[1]));
+		View::get()->addComboControls($label, $controls);
 	}
 
 	function sales_kits_list($name, $selected_id = null, $all_option = false, $submit_on_change = false)
@@ -781,11 +779,11 @@ class ListRendererBootstrap extends \ListRenderer
 	function sales_local_items_list_row($label, $name, $selected_id = null, $all_option = false, $submit_on_change = false)
 	{
 		View::get()->layoutHintRow();
-		$controlAsString = sales_items_list($name, $selected_id, $all_option, $submit_on_change, 'local', array(
+		$controls = sales_items_list($name, $selected_id, $all_option, $submit_on_change, 'local', array(
 			'cells' => false,
 			'editable' => false
 		));
-		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_COMBO, $label, $controlAsString));
+		View::get()->addComboControls($label, $controls);
 	}
 	// ------------------------------------------------------------------------------------
 	function stock_manufactured_items_list($name, $selected_id = null, $all_option = false, $submit_on_change = false)
@@ -799,8 +797,8 @@ class ListRendererBootstrap extends \ListRenderer
 
 	function stock_manufactured_items_list_cells($label, $name, $selected_id = null, $all_option = false, $submit_on_change = false)
 	{
-		$controlAsString = stock_manufactured_items_list($name, $selected_id, $all_option, $submit_on_change);
-		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_COMBO, $label, $controlAsString));
+		$controls = stock_manufactured_items_list($name, $selected_id, $all_option, $submit_on_change);
+		View::get()->addComboControls($label, $controls);
 	}
 
 	function stock_manufactured_items_list_row($label, $name, $selected_id = null, $all_option = false, $submit_on_change = false)
@@ -820,13 +818,13 @@ class ListRendererBootstrap extends \ListRenderer
 
 	function stock_component_items_list_cells($label, $name, $parent_stock_id, $selected_id = null, $all_option = false, $submit_on_change = false, $editkey = false)
 	{
-		$controlAsString = stock_items_list($name, $selected_id, $all_option, $submit_on_change, array(
+		$controls = stock_items_list($name, $selected_id, $all_option, $submit_on_change, array(
 			'where' => array(
 				"stock_id != " . db_escape($parent_stock_id)
 			),
 			'cells' => true
 		), $editkey);
-		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_COMBO, $label, $controlAsString));
+		View::get()->addComboControls($label, $controls);
 	}
 	// ------------------------------------------------------------------------------------
 	function stock_costable_items_list($name, $selected_id = null, $all_option = false, $submit_on_change = false)
@@ -840,13 +838,13 @@ class ListRendererBootstrap extends \ListRenderer
 
 	function stock_costable_items_list_cells($label, $name, $selected_id = null, $all_option = false, $submit_on_change = false)
 	{
-		$controlAsString = stock_items_list($name, $selected_id, $all_option, $submit_on_change, array(
+		$controls = stock_items_list($name, $selected_id, $all_option, $submit_on_change, array(
 			'where' => array(
 				"mb_flag!='D'"
 			),
 			'cells' => true
 		));
-		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_COMBO, $label, $controlAsString));
+		View::get()->addComboControls($label, $controls);
 	}
 
 	// ------------------------------------------------------------------------------------
@@ -864,14 +862,14 @@ class ListRendererBootstrap extends \ListRenderer
 	//
 	function stock_purchasable_items_list_cells($label, $name, $selected_id = null, $all_option = false, $submit_on_change = false, $editkey = false)
 	{
-		$controlAsString = stock_items_list($name, $selected_id, $all_option, $submit_on_change, array(
+		$controls = stock_items_list($name, $selected_id, $all_option, $submit_on_change, array(
 			'where' => array(
 				"mb_flag!= 'M'"
 			),
 			'editable' => 30,
 			'cells' => true
 		), $editkey);
-		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_COMBO, $label, $controlAsString));
+		View::get()->addComboControls($label, $controls);
 	}
 	/*
 	 * function stock_purchasable_items_list_row($label, $name, $selected_id=null, $all_option=false,
@@ -900,10 +898,10 @@ class ListRendererBootstrap extends \ListRenderer
 		while ($unit = db_fetch($result))
 			$units[$unit['abbr']] = $unit['name'];
 
-		$controlAsString = array_selector($name, $value, $units, array(
+		$controls = array_selector($name, $value, $units, array(
 			'disabled' => ! $enabled
 		));
-		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_ARRAY, $label, $controlAsString));
+		View::get()->addComboControls($label, $controls);
 	}
 
 	// ------------------------------------------------------------------------------------
@@ -968,8 +966,8 @@ class ListRendererBootstrap extends \ListRenderer
 
 	function item_tax_types_list_cells($label, $name, $selected_id = null)
 	{
-		$controlAsString = item_tax_types_list($name, $selected_id);
-		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_COMBO, $label, $controlAsString));
+		$controls = item_tax_types_list($name, $selected_id);
+		View::get()->addComboControls($label, $controls);
 	}
 
 	function item_tax_types_list_row($label, $name, $selected_id = null)
@@ -991,8 +989,8 @@ class ListRendererBootstrap extends \ListRenderer
 
 	function shippers_list_cells($label, $name, $selected_id = null)
 	{
-		$controlAsString = shippers_list($name, $selected_id);
-		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_COMBO, $label, $controlAsString));
+		$controls = shippers_list($name, $selected_id);
+		View::get()->addComboControls($label, $controls);
 	}
 
 	function shippers_list_row($label, $name, $selected_id = null)
@@ -1016,8 +1014,8 @@ class ListRendererBootstrap extends \ListRenderer
 
 	function sales_persons_list_cells($label, $name, $selected_id = null, $spec_opt = false)
 	{
-		$controlAsString = sales_persons_list($name, $selected_id, $spec_opt);
-		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_COMBO, $label, $controlAsString));
+		$controls = sales_persons_list($name, $selected_id, $spec_opt);
+		View::get()->addComboControls($label, $controls);
 	}
 
 	function sales_persons_list_row($label, $name, $selected_id = null, $spec_opt = false)
@@ -1035,8 +1033,8 @@ class ListRendererBootstrap extends \ListRenderer
 
 	function sales_areas_list_cells($label, $name, $selected_id = null)
 	{
-		$controlAsString = sales_areas_list($name, $selected_id);
-		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_COMBO, $label, $controlAsString));
+		$controls = sales_areas_list($name, $selected_id);
+		View::get()->addComboControls($label, $controls);
 	}
 
 	function sales_areas_list_row($label, $name, $selected_id = null)
@@ -1058,8 +1056,8 @@ class ListRendererBootstrap extends \ListRenderer
 
 	function sales_groups_list_cells($label, $name, $selected_id = null, $special_option = false)
 	{
-		$controlAsString = sales_groups_list($name, $selected_id, $special_option);
-		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_COMBO, $label, $controlAsString));
+		$controls = sales_groups_list($name, $selected_id, $special_option);
+		View::get()->addComboControls($label, $controls);
 	}
 
 	function sales_groups_list_row($label, $name, $selected_id = null, $special_option = false)
@@ -1089,8 +1087,8 @@ class ListRendererBootstrap extends \ListRenderer
 
 	function templates_list_cells($label, $name, $selected_id = null, $special_option = false)
 	{
-		$controlAsString = templates_list($name, $selected_id, $special_option);
-		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_COMBO, $label, $controlAsString));
+		$controls = templates_list($name, $selected_id, $special_option);
+		View::get()->addComboControls($label, $controls);
 	}
 
 	function templates_list_row($label, $name, $selected_id = null, $special_option = false)
@@ -1108,8 +1106,8 @@ class ListRendererBootstrap extends \ListRenderer
 
 	function workorders_list_cells($label, $name, $selected_id = null)
 	{
-		$controlAsString = workorders_list($name, $selected_id);
-		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_COMBO, $label, $controlAsString));
+		$controls = workorders_list($name, $selected_id);
+		View::get()->addComboControls($label, $controls);
 	}
 
 	function workorders_list_row($label, $name, $selected_id = null)
@@ -1127,8 +1125,8 @@ class ListRendererBootstrap extends \ListRenderer
 
 	function payment_terms_list_cells($label, $name, $selected_id = null)
 	{
-		$controlAsString = payment_terms_list($name, $selected_id);
-		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_COMBO, $label, $controlAsString));
+		$controls = payment_terms_list($name, $selected_id);
+		View::get()->addComboControls($label, $controls);
 	}
 
 	function payment_terms_list_row($label, $name, $selected_id = null)
@@ -1146,8 +1144,8 @@ class ListRendererBootstrap extends \ListRenderer
 
 	function credit_status_list_cells($label, $name, $selected_id = null)
 	{
-		$controlAsString = credit_status_list($name, $selected_id);
-		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_COMBO, $label, $controlAsString));
+		$controls = credit_status_list($name, $selected_id);
+		View::get()->addComboControls($label, $controls);
 	}
 
 	function credit_status_list_row($label, $name, $selected_id = null)
@@ -1170,8 +1168,8 @@ class ListRendererBootstrap extends \ListRenderer
 
 	function sales_types_list_cells($label, $name, $selected_id = null, $submit_on_change = false, $special_option = false)
 	{
-		$controlAsString = sales_types_list($name, $selected_id, $submit_on_change, $special_option);
-		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_COMBO, $label, $controlAsString));
+		$controls = sales_types_list($name, $selected_id, $submit_on_change, $special_option);
+		View::get()->addComboControls($label, $controls);
 	}
 
 	function sales_types_list_row($label, $name, $selected_id = null, $submit_on_change = false, $special_option = false)
@@ -1189,8 +1187,8 @@ class ListRendererBootstrap extends \ListRenderer
 
 	function movement_types_list_cells($label, $name, $selected_id = null)
 	{
-		$controlAsString = movement_types_list($name, $selected_id);
-		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_COMBO, $label, $controlAsString));
+		$controls = movement_types_list($name, $selected_id);
+		View::get()->addComboControls($label, $controls);
 	}
 
 	function movement_types_list_row($label, $name, $selected_id = null)
@@ -1220,8 +1218,8 @@ class ListRendererBootstrap extends \ListRenderer
 
 	function bank_reconciliation_list_cells($label, $account, $name, $selected_id = null, $submit_on_change = false, $special_option = false)
 	{
-		$controlAsString = bank_reconciliation_list($account, $name, $selected_id, $submit_on_change, $special_option);
-		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_COMBO, $label, $controlAsString));
+		$controls = bank_reconciliation_list($account, $name, $selected_id, $submit_on_change, $special_option);
+		View::get()->addComboControls($label, $controls);
 	}
 	/*
 	 * function bank_reconciliation_list_row($label, $account, $name, $selected_id=null, $submit_on_change=false,
@@ -1243,8 +1241,8 @@ class ListRendererBootstrap extends \ListRenderer
 	function workcenter_list_cells($label, $name, $selected_id = null, $all_option = false)
 	{
 		default_focus($name);
-		$controlAsString = workcenter_list($name, $selected_id, $all_option);
-		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_COMBO, $label, $controlAsString));
+		$controls = workcenter_list($name, $selected_id, $all_option);
+		View::get()->addComboControls($label, $controls);
 	}
 
 	function workcenter_list_row($label, $name, $selected_id = null, $all_option = false)
@@ -1268,8 +1266,8 @@ class ListRendererBootstrap extends \ListRenderer
 
 	function bank_accounts_list_cells($label, $name, $selected_id = null, $submit_on_change = false)
 	{
-		$controlAsString = bank_accounts_list($name, $selected_id, $submit_on_change);
-		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_COMBO, $label, $controlAsString));
+		$controls = bank_accounts_list($name, $selected_id, $submit_on_change);
+		View::get()->addComboControls($label, $controls);
 	}
 
 	function bank_accounts_list_row($label, $name, $selected_id = null, $submit_on_change = false)
@@ -1285,12 +1283,12 @@ class ListRendererBootstrap extends \ListRenderer
 		FROM " . TB_PREF . "bank_accounts
 		WHERE " . TB_PREF . "bank_accounts.account_type=" . BT_CASH;
 
-		$controlAsString = combo_input($name, $selected_id, $sql, 'id', 'bank_account_name', array(
+		$controls = combo_input($name, $selected_id, $sql, 'id', 'bank_account_name', array(
 			'format' => '_format_add_curr',
 			'select_submit' => $submit_on_change,
 			'async' => true
 		));
-		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_COMBO, $label, $controlAsString));
+		View::get()->addComboControls($label, $controls);
 	}
 	// -----------------------------------------------------------------------------------------------
 	function pos_list_row($label, $name, $selected_id = null, $spec_option = false, $submit_on_change = false)
@@ -1300,7 +1298,7 @@ class ListRendererBootstrap extends \ListRenderer
 
 		default_focus($name);
 
-		$controlAsString = combo_input($name, $selected_id, $sql, 'id', 'pos_name', array(
+		$controls = combo_input($name, $selected_id, $sql, 'id', 'pos_name', array(
 			'select_submit' => $submit_on_change,
 			'async' => true,
 			'spec_option' => $spec_option,
@@ -1309,7 +1307,7 @@ class ListRendererBootstrap extends \ListRenderer
 				'pos_name'
 			)
 		));
-		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_COMBO, $label, $controlAsString));
+		View::get()->addComboControls($label, $controls);
 	}
 	// -----------------------------------------------------------------------------------------------
 	// Payment type selector for current user.
@@ -1331,8 +1329,8 @@ class ListRendererBootstrap extends \ListRenderer
 
 	function sale_payment_list_cells($label, $name, $category, $selected_id = null, $submit_on_change = true)
 	{
-		$controlAsString = sale_payment_list($name, $category, $selected_id, $submit_on_change);
-		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_COMBO, $label, $controlAsString));
+		$controls = sale_payment_list($name, $category, $selected_id, $submit_on_change);
+		View::get()->addComboControls($label, $controls);
 	}
 	// -----------------------------------------------------------------------------------------------
 	function class_list($name, $selected_id = null, $submit_on_change = false)
@@ -1347,8 +1345,8 @@ class ListRendererBootstrap extends \ListRenderer
 
 	function class_list_cells($label, $name, $selected_id = null, $submit_on_change = false)
 	{
-		$controlAsString = class_list($name, $selected_id, $submit_on_change);
-		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_COMBO, $label, $controlAsString));
+		$controls = class_list($name, $selected_id, $submit_on_change);
+		View::get()->addComboControls($label, $controls);
 	}
 
 	function class_list_row($label, $name, $selected_id = null, $submit_on_change = false)
@@ -1372,8 +1370,8 @@ class ListRendererBootstrap extends \ListRenderer
 
 	function stock_categories_list_cells($label, $name, $selected_id = null, $spec_opt = false, $submit_on_change = false)
 	{
-		$controlAsString = stock_categories_list($name, $selected_id, $spec_opt, $submit_on_change);
-		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_COMBO, $label, $controlAsString));
+		$controls = stock_categories_list($name, $selected_id, $spec_opt, $submit_on_change);
+		View::get()->addComboControls($label, $controls);
 	}
 
 	function stock_categories_list_row($label, $name, $selected_id = null, $spec_opt = false, $submit_on_change = false)
@@ -1403,8 +1401,8 @@ class ListRendererBootstrap extends \ListRenderer
 
 	function gl_account_types_list_cells($label, $name, $selected_id = null, $all_option = false, $all = false)
 	{
-		$controlAsString = gl_account_types_list($name, $selected_id, $all_option, $all);
-		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_COMBO, $label, $controlAsString));
+		$controls = gl_account_types_list($name, $selected_id, $all_option, $all);
+		View::get()->addComboControls($label, $controls);
 	}
 
 	function gl_account_types_list_row($label, $name, $selected_id = null, $all_option = false, $all = false)
@@ -1455,8 +1453,8 @@ class ListRendererBootstrap extends \ListRenderer
 
 	function gl_all_accounts_list_cells($label, $name, $selected_id = null, $skip_bank_accounts = false, $cells = false, $all_option = false, $submit_on_change = false, $all = false)
 	{
-		$controlAsString = gl_all_accounts_list($name, $selected_id, $skip_bank_accounts, $cells, $all_option, $submit_on_change, $all);
-		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_COMBO, $label, $controlAsString));
+		$controls = gl_all_accounts_list($name, $selected_id, $skip_bank_accounts, $cells, $all_option, $submit_on_change, $all);
+		View::get()->addComboControls($label, $controls);
 	}
 
 	function gl_all_accounts_list_row($label, $name, $selected_id = null, $skip_bank_accounts = false, $cells = false, $all_option = false)
@@ -1603,8 +1601,8 @@ class ListRendererBootstrap extends \ListRenderer
 		global $thoseps;
 
 		View::get()->layoutHintRow();
-		$controlAsString = array_selector($name, $value, $thoseps);
-		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_COMBO, $label, $controlAsString));
+		$controls = array_selector($name, $value, $thoseps);
+		View::get()->addComboControls($label, $controls);
 	}
 
 	function decseps_list_row($label, $name, $value = null)
@@ -1612,8 +1610,8 @@ class ListRendererBootstrap extends \ListRenderer
 		global $decseps;
 
 		View::get()->layoutHintRow();
-		$controlAsString = array_selector($name, $value, $decseps);
-		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_COMBO, $label, $controlAsString));
+		$controls = array_selector($name, $value, $decseps);
+		View::get()->addComboControls($label, $controls);
 	}
 
 	function themes_list_row($label, $name, $value = null)
@@ -1646,8 +1644,8 @@ class ListRendererBootstrap extends \ListRenderer
 			$items[$pz] = $pz;
 
 		View::get()->layoutHintRow();
-		$controlAsString = array_selector($name, $value, $items);
-		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_COMBO, $label, $controlAsString));
+		$controls = array_selector($name, $value, $items);
+		View::get()->addComboControls($label, $controls);
 	}
 
 	function systypes_list($name, $value = null, $spec_opt = false, $submit_on_change = false, $exclude = array())
@@ -1862,8 +1860,8 @@ class ListRendererBootstrap extends \ListRenderer
 
 	function quick_entries_list_cells($label, $name, $selected_id = null, $type, $submit_on_change = false)
 	{
-		$controlAsString = quick_entries_list($name, $selected_id, $type, $submit_on_change);
-		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_COMBO, $label, $controlAsString));
+		$controls = quick_entries_list($name, $selected_id, $type, $submit_on_change);
+		View::get()->addComboControls($label, $controls);
 	}
 
 	function quick_entries_list_row($label, $name, $selected_id = null, $type, $submit_on_change = false)
@@ -1888,10 +1886,10 @@ class ListRendererBootstrap extends \ListRenderer
 		global $quick_entry_types;
 
 		View::get()->layoutHintRow();
-		$controlAsString = array_selector($name, $selected_id, $quick_entry_types, array(
+		$controls = array_selector($name, $selected_id, $quick_entry_types, array(
 			'select_submit' => $submit_on_change
 		));
-		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_COMBO, $label, $controlAsString));
+		View::get()->addComboControls($label, $controls);
 	}
 
 	function record_status_list_row($label, $name)
@@ -1927,8 +1925,8 @@ class ListRendererBootstrap extends \ListRenderer
 
 	function security_roles_list_cells($label, $name, $selected_id = null, $new_item = false, $submit_on_change = false, $show_inactive = false)
 	{
-		$controlAsString = security_roles_list($name, $selected_id, $new_item, $submit_on_change, $show_inactive);
-		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_COMBO, $label, $controlAsString));
+		$controls = security_roles_list($name, $selected_id, $new_item, $submit_on_change, $show_inactive);
+		View::get()->addComboControls($label, $controls);
 	}
 
 	function security_roles_list_row($label, $name, $selected_id = null, $new_item = false, $submit_on_change = false, $show_inactive = false)
@@ -2035,8 +2033,8 @@ class ListRendererBootstrap extends \ListRenderer
 	function crm_category_types_list_row($label, $name, $selected_id = null, $filter = array(), $submit_on_change = true)
 	{
 		View::get()->layoutHintRow();
-		$controlAsString = crm_category_types_list($name, $selected_id, $filter, $submit_on_change);
-		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_COMBO, $label, $controlAsString));
+		$controls = crm_category_types_list($name, $selected_id, $filter, $submit_on_change);
+		View::get()->addComboControls($label, $controls);
 	}
 
 	function payment_type_list_row($label, $name, $selected_id = null, $submit_on_change = false)

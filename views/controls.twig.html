@@ -27,7 +27,11 @@
 {% for row in element.content %}
 <tr>
 {% for cell in row.content %}
-<td{% if cell.columnSpan > 0 %} colspan="{{cell.columnSpan}}"{% endif %}>{{ cell.content | raw }}</td>
+  {% if cell.type == 'hidden' %}
+    {{ cell.content | raw }}
+  {% else %}
+    <td{% if cell.columnSpan > 0 %} colspan="{{cell.columnSpan}}"{% endif %}>{{ cell.content | raw }}</td>
+  {% endif %}
 {% endfor %}
 </tr>
 {% endfor %}

@@ -289,6 +289,24 @@ class ControlRendererBootstrap extends \ControlRenderer
 		View::get()->tableRowEnd();
 	}
 
+	/**
+	 *
+	 * @param array | string $cells
+	 */
+	function table_add_cells($cells)
+	{
+		if (is_array($cells)) {
+			$c = count($cells);
+			if ($c != 2) {
+				throw new \Exception("Unsupported array cell render '$c'");
+			}
+			View::get()->addControl(View::controlFromRenderedString(View::CONTROL_TEXT, '', $cells[0]));
+			View::get()->addControl(View::controlFromRenderedString(View::CONTROL_COMBO, '', $cells[1]));
+		} else {
+			View::get()->addControl(View::controlFromRenderedString(View::CONTROL_TEXT, $label, $cells));
+		}
+	}
+
 	function br($num = 1)
 	{
 // 		for ($i = 0; $i < $num; $i ++)

@@ -11,15 +11,12 @@ The easiest way to have a look at the theme is to browse the [demo site](http://
 Have a look, its mostly functional - though not completely.  Check out the known issues documented below and file a bug if you think you've found something we should know about.
 
 ## Current Status
-Its new, and largely funcitonal.  But its not complete, so you can expect to find some rough edges.  Many of the rough edges are documented in the 'known issues' documented below.
+Its new, and largely funcitonal.  However, its not 100% complete, so you can expect to find a few rough edges.  Have a look at the 'known issues' documented below.
 
 Up to the minute status can be found on our [Trello board](https://trello.com/b/FualXuOQ/frontaccounting).
 
 ### Known Issues
 
-* Some controls take up the full width of the screen when they should remain inside the 'container' area. e.g. Bank Deposit and Bank Payment.
-* Sales | Direct Invoice doesn't work
-* New Journal has issues.
 * Drill down reports don't work.
 
 ## Installation
@@ -31,6 +28,8 @@ Not happy with that?  Well obviously it *can* be installed.  The demo site is wo
 * Install my [feature/theme](https://github.com/cambell-prince/frontaccounting/tree/feature/theme) branch of FrontAccounting via git.
 * Install [this theme](https://github.com/cambell-prince/frontaccounting-theme-bootstrap) in the themes/bootstrap folder.
 * Run [composer](https://getcomposer.org/) install to install the dependencies.
+
+If there is sufficient interest I'll make a tar package available.
 
 ## Filing Bugs
 

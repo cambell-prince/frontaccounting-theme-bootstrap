@@ -262,7 +262,7 @@ class View
 	public function addControl($control)
 	{
 		if ($this->layout == self::LAYOUT_TABLE) {
-			$this->tableAddCell($control->controlAsString, $control->type);
+			$this->tableAddControl($control);
 			return;
 		} elseif ($this->layout == self::LAYOUT_UNKNOWN) {
 			if ($control->type != self::CONTROL_HIDDEN) {
@@ -271,6 +271,14 @@ class View
 		}
 		$control->column = $this->column;
 		$this->controls[] = $control;
+	}
+
+	public function tableAddControl($control)
+	{
+		if ($control->label) {
+			$this->tableAddCell($control->label, self::CONTROL_LABEL);
+		}
+		$this->tableAddCell($control->controlAsString, $control->type);
 	}
 
 	public function tableAddHeader($cells)

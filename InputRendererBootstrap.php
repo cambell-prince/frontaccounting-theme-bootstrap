@@ -447,6 +447,7 @@ class InputRendererBootstrap extends \InputRenderer
 		$controlAsString = "<input class=\"$class\" type=\"text\" name=\"$name\" size=\"$size\" maxlength=\"$max\" value=\"" . $_POST[$name] . "\"" . ($title ? " title='$title'" : '') . " >";
 // 		if ($post_label)
 // 			echo " " . $post_label;
+
 		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_TEXT, $label, $controlAsString));
 
 		$Ajax->addUpdate($name, $name, $_POST[$name]);
@@ -593,7 +594,9 @@ class InputRendererBootstrap extends \InputRenderer
 	function ref_row($label, $name, $title = null, $init = null, $submit_on_change = false)
 	{
 		View::get()->layoutHintRow();
+		View::get()->tableRowStart();
 		$this->ref_cells($label, $name, $title, $init, null, $submit_on_change);
+		View::get()->tableRowEnd();
 	}
 
 	// -----------------------------------------------------------------------------------

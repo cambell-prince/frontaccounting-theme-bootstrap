@@ -23,13 +23,20 @@ Up to the minute status can be found on our [Trello board](https://trello.com/b/
 
 Currently, er, you can't.  Try the [demo site](http://demo.saygoweb.com/frontaccounting/) instead. 
 
-Not happy with that?  Well obviously it *can* be installed.  The demo site is working. So...
+Not happy with that?  Well obviously it *can* be installed.  The demo site is working. So if you're a developer...
+
+### Installation via git
 
 * Install my [feature/theme](https://github.com/cambell-prince/frontaccounting/tree/feature/theme) branch of FrontAccounting via git.
 * Install [this theme](https://github.com/cambell-prince/frontaccounting-theme-bootstrap) in the themes/bootstrap folder.
 * Run [composer](https://getcomposer.org/) install to install the dependencies.
 
-If there is sufficient interest I'll make a tar package available.
+### Installation via tar pacakages
+
+* Download the all in [one package](https://github.com/cambell-prince/frontaccounting-theme-bootstrap/releases/tag/v0.8.0-alpha.1).
+* Extract the contents of the package into your web root directory.
+* Run the FA installer as usual.
+* Select the bootstrap theme from the Setup | Display Setup page.
 
 ## Filing Bugs
 

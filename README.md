@@ -28,8 +28,14 @@ Not happy with that?  Well obviously it *can* be installed.  The demo site is wo
 ### Developer Installation via git
 
 * Install my [feature/theme](https://github.com/cambell-prince/frontaccounting/tree/feature/theme) branch of FrontAccounting via git.
+    * `git clone https://github.com/cambell-prince/frontaccounting-theme-bootstrap.git`
+    * `git checkout feature/theme` or `git checkout master-cp`
 * Install [this theme](https://github.com/cambell-prince/frontaccounting-theme-bootstrap) in the themes/bootstrap folder.
+    * `cd themes`
+    * `git clone https://github.com/cambell-prince/frontaccounting-theme-bootstrap.git bootstrap`
 * Run [composer](https://getcomposer.org/) install to install the dependencies.
+    * `cd bootstrap`
+    * `composer install`
 
 ### User Installation via tar or zip packages
 

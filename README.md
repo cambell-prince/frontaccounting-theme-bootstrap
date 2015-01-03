@@ -25,15 +25,15 @@ Currently, er, you can't.  Try the [demo site](http://demo.saygoweb.com/frontacc
 
 Not happy with that?  Well obviously it *can* be installed.  The demo site is working. So if you're a developer...
 
-### Installation via git
+### Developer Installation via git
 
 * Install my [feature/theme](https://github.com/cambell-prince/frontaccounting/tree/feature/theme) branch of FrontAccounting via git.
 * Install [this theme](https://github.com/cambell-prince/frontaccounting-theme-bootstrap) in the themes/bootstrap folder.
 * Run [composer](https://getcomposer.org/) install to install the dependencies.
 
-### Installation via tar pacakages
+### User Installation via tar or zip packages
 
-* Download the all in [one package](https://github.com/cambell-prince/frontaccounting-theme-bootstrap/releases/tag/v0.8.0-alpha.1).
+* Download one of the [all in one packages](https://github.com/cambell-prince/frontaccounting-theme-bootstrap/releases/tag/v0.8.0-alpha.1), either the tgz or zip format.
 * Extract the contents of the package into your web root directory.
 * Run the FA installer as usual.
 * Select the bootstrap theme from the Setup | Display Setup page.

@@ -86,6 +86,9 @@ class TableCell
 	public $type;
 
 	public function __construct($content, $type) {
+		if ($content === null) {
+			$content = '';
+		}
 		if (!is_string($content)) {
 			throw new \Exception("String expected, '$content' given");
 		}

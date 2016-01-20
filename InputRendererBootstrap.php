@@ -74,14 +74,6 @@ class InputRendererBootstrap extends \InputRenderer
 		else
 			return $ret;
 	}
-	/*
-	 * Universal submit form button. $atype - type of submit: Normal submit: false - normal button; optional icon null -
-	 * button visible only in fallback mode; optional icon Ajax submit: true	 - standard button; optional icon 'default'
-	 * - default form submit on Ctrl-Enter press; dflt ICON_OK icon 'selector' - ditto with closing current popup editor
-	 * window 'cancel' - cancel form entry on Escape press; dflt ICON_CANCEL 'process' - displays progress bar during
-	 * call; optional icon 'nonajax' - ditto, non-ajax submit $atype can contain also multiply type selectors separated
-	 * by space, however make sense only combination of 'process' and one of defualt/selector/cancel
-	 */
 	function submit($name, $value, $echo = true, $title = false, $atype = false, $icon = false)
 	{
 		global $path_to_root;
@@ -145,7 +137,10 @@ class InputRendererBootstrap extends \InputRenderer
 		$this->submit($name, $value, true, $title, $async, $icon);
 	}
 	/*
-	 * For following controls: 'both' - use both Ctrl-Enter and Escape hotkeys 'cancel' - apply to 'RESET' button
+	For following controls:
+		'both' - use both Ctrl-Enter and Escape hotkeys 
+		'upgrade' - use Ctrl-Enter with progress ajax indicator and Escape hotkeys. Nonajax request for OK option is performed.
+		'cancel' - apply to 'RESET' button
 	 */
 	function submit_add_or_update($add = true, $title = false, $async = false, $clone = false)
 	{
@@ -153,6 +148,9 @@ class InputRendererBootstrap extends \InputRenderer
 
 		if ($async === 'both') {
 			$async = 'default';
+			$cancel = 'cancel';
+		} elseif ($async === 'upgrade') {
+			$async = 'default nonajax process';
 			$cancel = 'cancel';
 		} else if ($async === 'default')
 			$cancel = true;
@@ -194,6 +192,13 @@ class InputRendererBootstrap extends \InputRenderer
 // 		if ($right)
 // 			echo "<td>&nbsp;</td>\n";
 		$this->submit_cells($name, $value, $extra, $title, $async);
+	}
+
+	function submit_return($name, $value, $title = false)
+	{
+		if (@$_REQUEST['popup']) {
+			$this->submit($name, $value, true, $title, 'selector');
+		}
 	}
 
 	function submit_js_confirm($name, $msg, $set = true)
@@ -302,7 +307,7 @@ class InputRendererBootstrap extends \InputRenderer
 	function radio($label, $name, $value, $selected = null, $submit_on_change = false)
 	{
 		if (! isset($selected))
-			$selected = get_post($name) == $value;
+			$selected = get_post($name) === (string)$value;
 
 		if ($submit_on_change === true)
 			$submit_on_change = "JsHttpRequest.request(\"_{$name}_update\", this.form);";
@@ -515,7 +520,7 @@ class InputRendererBootstrap extends \InputRenderer
 	//
 	function date_cells($label, $name, $title = null, $check = null, $inc_days = 0, $inc_months = 0, $inc_years = 0, $params = null, $submit_on_change = false)
 	{
-		global $use_date_picker, $path_to_root, $Ajax;
+		global $path_to_root, $Ajax;
 
 		if (! isset($_POST[$name]) || $_POST[$name] == "") {
 			if ($inc_years == 1001)
@@ -531,7 +536,7 @@ class InputRendererBootstrap extends \InputRenderer
 				$_POST[$name] = $dd;
 			}
 		}
-		if ($use_date_picker) {
+		if (user_use_date_picker()) {
 			$calc_image = (file_exists("$path_to_root/themes/" . user_theme() . "/images/cal.gif")) ? "$path_to_root/themes/" . user_theme() . "/images/cal.gif" : "$path_to_root/themes/default/images/cal.gif";
 			$post_label = "<a tabindex='-1' href=\"javascript:date_picker(document.getElementsByName('$name')[0]);\">" . "	<img src='$calc_image' width='15' height='15' border='0' alt='" . _('Click Here to Pick up the date') . "'></a>\n";
 		} else
@@ -584,18 +589,28 @@ class InputRendererBootstrap extends \InputRenderer
 		$this->file_cells($label, $name, $id);
 	}
 
-	// -----------------------------------------------------------------------------------
-	function ref_cells($label, $name, $title = null, $init = null, $params = null, $submit_on_change = false)
+	/*-----------------------------------------------------------------------------------
+	
+	 Reference number input.
+	
+	 Optional  $context array contains transaction data used in number parsing:
+	 	'data' - data used for month/year codes
+		'location' - location code
+	 	'customer' - debtor_no
+	 	'supplier' - supplier id
+	 	'branch' - branch_code
+	*/
+	function ref_cells($label, $name, $title = null, $init = null, $params = null, $submit_on_change = false, $type = null, $context = null)
 	{
-		$this->text_cells_ex($label, $name, 16, 18, $init, $title, $params, null, $submit_on_change);
+		parent::ref_cells($label, $name, $title, $init, $params, $submit_on_change, $type, $context);
 	}
 
 	// -----------------------------------------------------------------------------------
-	function ref_row($label, $name, $title = null, $init = null, $submit_on_change = false)
+	function ref_row($label, $name, $title = null, $init = null, $submit_on_change = false, $type=null, $context = null)
 	{
 		View::get()->layoutHintRow();
 		View::get()->tableRowStart();
-		$this->ref_cells($label, $name, $title, $init, null, $submit_on_change);
+		$this->ref_cells($label, $name, $title, $init, null, $submit_on_change, $type, $context);
 		View::get()->tableRowEnd();
 	}
 
@@ -726,14 +741,6 @@ class InputRendererBootstrap extends \InputRenderer
 		$this->textarea_cells($label, $name, $value, $cols, $rows, $title, $params);
 	}
 
-	// -----------------------------------------------------------------------------------
-	/*
-	 * function text_row_with_submit($label, $name, $value, $size, $max, $input_name, $input_value) { global $Ajax;
-	 * default_focus($name); echo "<tr><td>$label</td>\n"; echo "<td>"; if ($value == null) $value =
-	 * (!isset($_POST[$name]) ? "" : $_POST[$name]); echo "<input type=\"text\" name=\"$name\" size=\"$size\"
-	 * maxlength=\"$max\" value=\"$value\"> "; submit($input_name, $input_value); echo "</td></tr>\n";
-	 * $Ajax->addUpdate($name, $name, $value); }
-	 */
 	// -----------------------------------------------------------------------------------
 	//
 	// When show_inactive page option is set

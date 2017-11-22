@@ -449,18 +449,7 @@ class ListRendererBootstrap extends \ListRenderer
 		$controlAsString = array_selector($name, $selected_id, $items, $options);
 		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_COMBO, $label, $controlAsString));
 	}
-	
 	//----------------------------------------------------------------------------------------------
-	function _format_add_curr($row)
-	{
-		static $company_currency;
-
-		if ($company_currency == null) {
-			$company_currency = get_company_currency();
-		}
-		return $row[1] . ($row[2] == $company_currency ? '' : ("&nbsp;-&nbsp;" . $row[2]));
-	}
-
 	function add_edit_combo($type)
 	{
 		global $path_to_root, $popup_editors, $SysPrefs;
@@ -1120,24 +1109,16 @@ class ListRendererBootstrap extends \ListRenderer
 	}
 
 	// ------------------------------------------------------------------------------------
-	function item_tax_types_list($name, $selected_id = null)
+	function item_tax_types_list_cells($label, $name, $selected_id = null, $show_inactive = false)
 	{
-		$sql = "SELECT id, name FROM " . TB_PREF . "item_tax_types";
-		return combo_input($name, $selected_id, $sql, 'id', 'name', array(
-			'order' => 'id'
-		));
-	}
-
-	function item_tax_types_list_cells($label, $name, $selected_id = null)
-	{
-		$controls = item_tax_types_list($name, $selected_id);
+		$controls = item_tax_types_list($name, $selected_id, $show_inactive);
 		View::get()->addComboControls($label, $controls);
 	}
 
-	function item_tax_types_list_row($label, $name, $selected_id = null)
+	function item_tax_types_list_row($label, $name, $selected_id = null, $show_inactive = false)
 	{
 		View::get()->layoutHintRow();
-		$this->item_tax_types_list_cells($label, $name, $selected_id);
+		$this->item_tax_types_list_cells($label, $name, $selected_id, $show_inactive);
 	}
 
 	// ------------------------------------------------------------------------------------
@@ -1886,18 +1867,18 @@ class ListRendererBootstrap extends \ListRenderer
 		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_ARRAY, $label, $controlAsString));
 	}
 
-	function cust_allocations_list_cells($label, $name, $selected = null)
+	function cust_allocations_list_cells($label, $name, $selected = null, $submit_on_change = false)
 	{
 
 		$allocs = array(
 			ALL_TEXT => _("All Types"),
 			'1' => _("Sales Invoices"),
-			'2' => _("Overdue Invoices"),
+			'2' => _("Unsettled transactions"),
 			'3' => _("Payments"),
 			'4' => _("Credit Notes"),
 			'5' => _("Delivery Notes")
 		);
-		$controlAsString = array_selector($name, $selected, $allocs);
+		$controlAsString = array_selector($name, $selected, $allocs, array('select_submit'=> $submit_on_change));
 		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_ARRAY, $label, $controlAsString));
 	}
 
@@ -1916,19 +1897,19 @@ class ListRendererBootstrap extends \ListRenderer
 		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_ARRAY, $label, $controlAsString));
 	}
 
-	function supp_transactions_list_cell($name, $selected = null)
+	function supp_transactions_list_cell($name, $selected = null, $submit_on_change = false)
 	{
 		$allocs = array(
 			ALL_TEXT => _("All Types"),
 			'6' => _("GRNs"),
 			'1' => _("Invoices"),
-			'2' => _("Overdue Invoices"),
+			'2' => _("Unsettled transactions"),
 			'3' => _("Payments"),
 			'4' => _("Credit Notes"),
 			'5' => _("Overdue Credit Notes")
 		);
 
-		$controlAsString = array_selector($name, $selected, $allocs);
+		$controlAsString = array_selector($name, $selected, $allocs, array('select_submit'=> $submit_on_change));
 		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_ARRAY, $label, $controlAsString));
 	}
 

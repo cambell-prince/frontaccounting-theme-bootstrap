@@ -296,7 +296,7 @@ class ControlRendererBootstrap extends \ControlRenderer
 			View::get()->addControl(View::controlFromRenderedString(View::CONTROL_TEXT, '', $cells[0]));
 			View::get()->addControl(View::controlFromRenderedString(View::CONTROL_COMBO, '', $cells[1]));
 		} else {
-			View::get()->addControl(View::controlFromRenderedString(View::CONTROL_TEXT, $label, $cells));
+			View::get()->addControl(View::controlFromRenderedString(View::CONTROL_TEXT, '', $cells));
 		}
 	}
 

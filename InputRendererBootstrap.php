@@ -602,7 +602,49 @@ class InputRendererBootstrap extends \InputRenderer
 	*/
 	function ref_cells($label, $name, $title = null, $init = null, $params = null, $submit_on_change = false, $type = null, $context = null)
 	{
-		parent::ref_cells($label, $name, $title, $init, $params, $submit_on_change, $type, $context);
+		// parent::ref_cells($label, $name, $title, $init, $params, $submit_on_change, $type, $context);
+		global $Ajax, $Refs;
+
+		if (isset($type)) {
+			if (empty($_POST[$name.'_list'])) // restore refline id
+				$_POST[$name.'_list'] = $Refs->reflines->find_refline_id(empty($_POST[$name]) ? $init : $_POST[$name], $type);
+
+			if (empty($_POST[$name])) // initialization
+			{
+				if (isset($init))
+				{
+					$_POST[$name] = $init;
+				} else {
+					$_POST[$name] = $Refs->get_next($type, $_POST[$name.'_list'], $context);
+				}
+				$Ajax->addUpdate(true, $name, $_POST[$name]);
+			}
+
+			if (check_ui_refresh($name)) { // call context changed
+				$_POST[$name] = $Refs->normalize($_POST[$name], $type, $context, $_POST[$name.'_list']);
+				$Ajax->addUpdate(true, $name, $_POST[$name]);
+			}
+
+			if ($Refs->reflines->count($type)>1) {
+				if (list_updated($name.'_list')) {
+					$_POST[$name] = $Refs->get_next($type, $_POST[$name.'_list'], $context);
+					$Ajax->addUpdate(true, $name, $_POST[$name]);
+				}
+				$list = refline_list($name.'_list', $type);
+			} else {
+				$list = '';
+			}
+
+			$controlAsString = $list."<input class='form-control' type='text' name='".$name."' "
+				.(check_edit_access($name) ? '' : 'disabled ')
+				."value='".@$_POST[$name]."' size=10 maxlength=35>";
+			View::get()->addControl(View::controlFromRenderedString(View::CONTROL_TEXT, $label, $controlAsString));			
+
+		}
+		else // just wildcard ref field (e.g. for global inquires)
+		{
+			text_cells_ex($label, $name, 16, 35, $init, $title, $params, null, $submit_on_change);
+		}
 	}
 
 	// -----------------------------------------------------------------------------------

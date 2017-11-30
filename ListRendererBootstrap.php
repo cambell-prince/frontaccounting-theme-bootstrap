@@ -12,6 +12,9 @@ class ListRendererBootstrap extends \ListRenderer
 	{
 		global $Ajax, $path_to_root, $SysPrefs;
 
+		// In this theme we don't support search right now. CP 2017-11
+		$options['search_box'] = false;
+
 		$opts = array( // default options
 			'where' => array(), // additional constraints
 			'order' => $namefield, // list sort order
@@ -45,7 +48,7 @@ class ListRendererBootstrap extends \ListRenderer
 			'show_inactive' => false, // show inactive records.
 			'editable' => false, // false, or length of editable entry field
 			'editlink' => false	// link to entity entry/edit page (optional)
-				);
+		);
 		// ------ merge options with defaults ----------
 		if ($options != null)
 			$opts = array_merge($opts, $options);
@@ -168,10 +171,13 @@ class ListRendererBootstrap extends \ListRenderer
 		$found = false;
 		$lastcat = null;
 		$edit = false;
+		$pname = false;
+		if (($type === "customer" || $type === "supplier") && !empty($SysPrefs->prefs['shortname_name_in_list']))
+			$pname = true;
 		if ($result = db_query($sql)) {
 			while ($contact_row = db_fetch($result)) {
 				$value = $contact_row[0];
-				$descr = $opts['format'] == null ? $contact_row[1] : call_user_func($opts['format'], $contact_row);
+				$descr = $opts['format'] == null ? $contact_row[1] : call_user_func($opts['format'], $contact_row, $pname);
 				$sel = '';
 				if (get_post($search_button) && ($txt == $value)) {
 					$selected_id[] = $value;
@@ -467,7 +473,11 @@ class ListRendererBootstrap extends \ListRenderer
 
 	function supplier_list($name, $selected_id = null, $spec_option = false, $submit_on_change = false, $all = false, $editkey = false)
 	{
-		$sql = "SELECT supplier_id, supp_ref, curr_code, inactive FROM " . TB_PREF . "suppliers ";
+		global $SysPrefs;
+		if (!empty($SysPrefs->prefs['shortname_name_in_list']))
+			$sql = "SELECT supplier_id, supp_ref, supp_name, curr_code, inactive FROM ".TB_PREF."suppliers ";
+		else	
+			$sql = "SELECT supplier_id, supp_ref, curr_code, inactive FROM " . TB_PREF . "suppliers ";
 
 		$mode = get_company_pref('no_supplier_list');
 
@@ -513,8 +523,11 @@ class ListRendererBootstrap extends \ListRenderer
 	function customer_list($name, $selected_id = null, $spec_option = false, $submit_on_change = false, $show_inactive = false, $editkey = false)
 	{
 		global $all_items;
-
-		$sql = "SELECT debtor_no, debtor_ref, curr_code, inactive FROM " . TB_PREF . "debtors_master ";
+		global $SysPrefs;
+		if (!empty($SysPrefs->prefs['shortname_name_in_list']))
+			$sql = "SELECT debtor_no, debtor_ref, name, curr_code, inactive FROM ".TB_PREF."debtors_master ";
+		else	
+			$sql = "SELECT debtor_no, debtor_ref, curr_code, inactive FROM " . TB_PREF . "debtors_master ";
 
 		$mode = get_company_pref('no_customer_list');
 
@@ -751,13 +764,13 @@ class ListRendererBootstrap extends \ListRenderer
 			'editlink' => $editkey ? add_edit_combo('item') : false,
 			'editable' => false,
 			'max' => 255
-		), $opts), $type);
+		), $opts), 0); // $type); // This use of $type is not consistent with the use in combo_input CP 2017-11
 		return $ret;
 	}
 
 	function _format_stock_items($row)
 	{
-		return (user_show_codes() ? ($row[0] . "&nbsp;-&nbsp;") : "") . $row[1];
+		return parent::_format_stock_items($row);
 	}
 
 	function stock_items_list_cells($label, $name, $selected_id = null, $all_option = false, $submit_on_change = false, $all = false, $editkey = false, $opts= array())
@@ -767,10 +780,14 @@ class ListRendererBootstrap extends \ListRenderer
 		else
 			$editor_item = 'item';
 	
-		$controls = stock_items_list($name, $selected_id, $all_option, $submit_on_change, array(
-			'cells' => true,
-			'show_inactive' => $all
-		), $editkey);
+		$controls = stock_items_list(
+			$name, $selected_id, $all_option, $submit_on_change,
+			array_merge(array(
+				'cells' => true,
+				'show_inactive' => $all
+			), $opts),
+			$editkey
+		);
 		View::get()->addComboControls($label, $controls);
 	}
 	/*
@@ -824,7 +841,7 @@ class ListRendererBootstrap extends \ListRenderer
 			),
 			'editable' => 30,
 			'max' => 255
-		), $opts));
+		), $opts), 0); //$type == 'kits' ? $type : "stock_sales" // This use of $type is not consistent with the use in combo_input CP 2017-11
 	}
 
 	function sales_items_list_cells($label, $name, $selected_id = null, $all_option = false, $submit_on_change = false, $editkey = false)

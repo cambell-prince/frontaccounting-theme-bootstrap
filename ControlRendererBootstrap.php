@@ -111,16 +111,9 @@ class ControlRendererBootstrap extends \ControlRenderer
 // 		echo "</td></tr><tr><td valign=center $params>";
 	}
 
-	function meta_forward($forward_to, $params = "")
+	function meta_forward($forward_to, $params = "", $timeout = 0)
 	{
-		global $Ajax;
-		echo "<meta http-equiv='Refresh' content='0; url=$forward_to?$params'>\n";
-		echo "<center><br>" . _("You should automatically be forwarded.");
-		echo " " . _("If this does not happen") . " " . "<a href='$forward_to?$params'>" . _("click here") . "</a> " . _("to continue") . ".<br><br></center>\n";
-		if ($params != '')
-			$params = '?' . $params;
-		$Ajax->redirect($forward_to . $params);
-		exit();
+		parent::meta_forward($forward_to, $params, $timeout);
 	}
 
 	function hyperlink_back($center = true, $no_menu = true, $type_no = 0, $trans_no = 0, $final = false)
@@ -303,7 +296,7 @@ class ControlRendererBootstrap extends \ControlRenderer
 			View::get()->addControl(View::controlFromRenderedString(View::CONTROL_TEXT, '', $cells[0]));
 			View::get()->addControl(View::controlFromRenderedString(View::CONTROL_COMBO, '', $cells[1]));
 		} else {
-			View::get()->addControl(View::controlFromRenderedString(View::CONTROL_TEXT, $label, $cells));
+			View::get()->addControl(View::controlFromRenderedString(View::CONTROL_TEXT, '', $cells));
 		}
 	}
 
@@ -480,8 +473,14 @@ class ControlRendererBootstrap extends \ControlRenderer
 		}
 
 		$cc = 0; // row colour counter
-		foreach ($pager->data as $line_no => $row) {
-
+		$data = [];
+		// Support for the new PagerInterface whilst maintaining compatibility upstream.
+		if (is_a($pager, 'SGW\common\Pager\PagerInterface')) {
+			$data = $pager->generator();
+		} else {
+			$data = $pager->data;
+		}
+		foreach ($data as $line_no => $row) {
 			$marker = $pager->marker;
 			if ($marker && $marker($row))
 				start_row("class='$pager->marker_class'");
@@ -489,13 +488,25 @@ class ControlRendererBootstrap extends \ControlRenderer
 				alt_table_row_color($cc);
 			foreach ($pager->columns as $k => $col) {
 				$coltype = $col['type'];
-				$cell = isset($col['name']) ? $row[$col['name']] : '';
+				$cell = '';
+				if (isset($col['name'])) {
+					$property = $col['name'];
+					if (is_object($row)) {
+						if (property_exists($row, $property)) {
+							$cell = $row->$property;
+						}
+					} else {
+						$cell = $row[$property];
+					}
+				}
 
 				if (isset($col['fun'])) { // use data input function if defined
 					$fun = $col['fun'];
-					if (method_exists($pager, $fun)) {
+					if (is_string($fun) && method_exists($pager, $fun)) {
 						$cell = $pager->$fun($row, $cell);
-					} elseif (function_exists($fun)) {
+					} elseif (is_string($fun) && function_exists($fun)) {
+						$cell = $fun($row, $cell);
+					} elseif (is_callable($fun)) {
 						$cell = $fun($row, $cell);
 					} else
 						$cell = '';

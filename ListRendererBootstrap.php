@@ -8,9 +8,12 @@ class ListRendererBootstrap extends \ListRenderer
 	// Universal sql combo generator
 	// $sql must return selector values and selector texts in columns 0 & 1
 	// Options are merged with defaults.
-	function combo_input($name, $selected_id, $sql, $valfield, $namefield, $options = null)
+	function combo_input($name, $selected_id, $sql, $valfield, $namefield, $options = null, $type=null)
 	{
-		global $Ajax;
+		global $Ajax, $path_to_root, $SysPrefs;
+
+		// In this theme we don't support search right now. CP 2017-11
+		$options['search_box'] = false;
 
 		$opts = array( // default options
 			'where' => array(), // additional constraints
@@ -43,8 +46,9 @@ class ListRendererBootstrap extends \ListRenderer
 			'box_hint' => null, // box/selectors hints; null = std see below
 			'category' => false, // category column name or false
 			'show_inactive' => false, // show inactive records.
-			'editable' => false // false, or length of editable entry field
-				);
+			'editable' => false, // false, or length of editable entry field
+			'editlink' => false	// link to entity entry/edit page (optional)
+		);
 		// ------ merge options with defaults ----------
 		if ($options != null)
 			$opts = array_merge($opts, $options);
@@ -167,12 +171,13 @@ class ListRendererBootstrap extends \ListRenderer
 		$found = false;
 		$lastcat = null;
 		$edit = false;
-		// if($name=='stock_id') display_notification('<pre>'.print_r($_POST, true).'</pre>');
-		// if($name=='curr_default') display_notification($opts['search_submit']);
+		$pname = false;
+		if (($type === "customer" || $type === "supplier") && !empty($SysPrefs->prefs['shortname_name_in_list']))
+			$pname = true;
 		if ($result = db_query($sql)) {
 			while ($contact_row = db_fetch($result)) {
 				$value = $contact_row[0];
-				$descr = $opts['format'] == null ? $contact_row[1] : call_user_func($opts['format'], $contact_row);
+				$descr = $opts['format'] == null ? $contact_row[1] : call_user_func($opts['format'], $contact_row, $pname);
 				$sel = '';
 				if (get_post($search_button) && ($txt == $value)) {
 					$selected_id[] = $value;
@@ -197,11 +202,15 @@ class ListRendererBootstrap extends \ListRenderer
 				}
 				$cat = $contact_row[$opts['category']];
 				if ($opts['category'] !== false && $cat != $lastcat) {
+					if ($lastcat!==null)
+						$selector .= "</optgroup>";
 					$selector .= "<optgroup label='" . $cat . "'>\n";
 					$lastcat = $cat;
 				}
 				$selector .= "<option $sel $optclass value='$value'>$descr</option>\n";
 			}
+			if ($lastcat!==null)
+				$selector .= "</optgroup>";
 			db_free_result($result);
 		}
 
@@ -209,8 +218,6 @@ class ListRendererBootstrap extends \ListRenderer
 		if ($spec_option !== false) { // if special option used - add it
 			$first_id = $spec_id;
 			$first_opt = $spec_option;
-			// }
-			// if($first_id !== false) {
 			$sel = $found === false ? 'selected' : '';
 			$optclass = @$contact_row['inactive'] ? "class='inactive'" : '';
 			$selector = "<option $sel value='$first_id'>$first_opt</option>\n" . $selector;
@@ -224,7 +231,16 @@ class ListRendererBootstrap extends \ListRenderer
 
 		$_POST[$name] = $multi ? $selected_id : $selected_id[0];
 
-		$selector = "<select autocomplete='off' " . ($multi ? "multiple" : '') . ($opts['height'] !== false ? ' size="' . $opts['height'] . '"' : '') . "$disabled name='$name" . ($multi ? '[]' : '') . "' class='$class' title='" . $opts['sel_hint'] . "' $rel>" . $selector . "</select>\n";
+		if ($SysPrefs->use_popup_search)
+			$selector = "<select id='$name' autocomplete='off' ".($multi ? "multiple" : '')
+			. ($opts['height']!==false ? ' size="'.$opts['height'].'"' : '')
+			. "$disabled name='$name".($multi ? '[]':'')."' class='$class' title='"
+			. $opts['sel_hint']."' $rel>".$selector."</select>\n";
+		else
+			$selector = "<select autocomplete='off' ".($multi ? "multiple" : '')
+			. ($opts['height']!==false ? ' size="'.$opts['height'].'"' : '')
+			. "$disabled name='$name".($multi ? '[]':'')."' class='$class' title='"
+			. $opts['sel_hint']."' $rel>".$selector."</select>\n";
 
 		if ($by_id && ($search_box != false || $opts['editable'])) {
 			// on first display show selector list
@@ -245,29 +261,96 @@ class ListRendererBootstrap extends \ListRenderer
 
 		// if selectable or editable list is used - add select button
 		if ($select_submit != false || $search_button) {
-			global $_select_button;
 			// button class selects form reload/ajax selector update
-			$selector .= sprintf($_select_button, $disabled, user_theme(), (fallback_mode() ? '' : 'display:none;'), '_' . $name . '_update') . "\n";
+			$selector .= sprintf(SELECT_BUTTON, $disabled, user_theme(), (fallback_mode() ? '' : 'display:none;'), '_' . $name . '_update') . "\n";
 		}
 		// ------ make combo ----------
 		$edit_entry = '';
 		if ($search_box != false) {
 			$edit_entry = "<input $disabled type='text' name='$search_box' id='$search_box' size='" . $opts['size'] . "' maxlength='" . $opts['max'] . "' value='$txt' class='$class' rel='$name' autocomplete='off' title='" . $opts['box_hint'] . "'" . (! fallback_mode() && ! $by_id ? " style=display:none;" : '') . ">\n";
 			if ($search_submit != false || $opts['editable']) {
-				global $_search_button;
-				$edit_entry .= sprintf($_search_button, $disabled, user_theme(), (fallback_mode() ? '' : 'display:none;'), $search_submit ? $search_submit : "_{$name}_button") . "\n";
+				$edit_entry .= sprintf(SEARCH_BUTTON, $disabled, user_theme(), (fallback_mode() ? '' : 'display:none;'), $search_submit ? $search_submit : "_{$name}_button") . "\n";
 			}
 		}
 		default_focus(($search_box && $by_id) ? $search_box : $name);
 
-		if ($opts['cells']) {
-			return array($edit_entry, $selector);
+		$img = "";
+		if ($SysPrefs->use_popup_search && (!isset($opts['fixed_asset']) || !$opts['fixed_asset']))
+		{
+			$img_title = "";
+			$link = "";
+			$id = $name;
+			if ($SysPrefs->use_popup_windows) {
+				switch (strtolower($type)) {
+					case "stock":
+						$link = $path_to_root . "/inventory/inquiry/stock_list.php?popup=1&type=all&client_id=" . $id;
+						$img_title = _("Search items");
+						break;
+					case "stock_manufactured":
+						$link = $path_to_root . "/inventory/inquiry/stock_list.php?popup=1&type=manufactured&client_id=" . $id;
+						$img_title = _("Search items");
+						break;
+					case "stock_purchased":
+						$link = $path_to_root . "/inventory/inquiry/stock_list.php?popup=1&type=purchasable&client_id=" . $id;
+						$img_title = _("Search items");
+						break;
+					case "stock_sales":
+						$link = $path_to_root . "/inventory/inquiry/stock_list.php?popup=1&type=sales&client_id=" . $id;
+						$img_title = _("Search items");
+						break;
+					case "stock_costable":
+						$link = $path_to_root . "/inventory/inquiry/stock_list.php?popup=1&type=costable&client_id=" . $id;
+						$img_title = _("Search items");
+						break;
+					case "component":
+						$parent = $opts['parent'];
+						$link = $path_to_root . "/inventory/inquiry/stock_list.php?popup=1&type=component&parent=".$parent."&client_id=" . $id;
+						$img_title = _("Search items");
+						break;
+					case "kits":
+						$link = $path_to_root . "/inventory/inquiry/stock_list.php?popup=1&type=kits&client_id=" . $id;
+						$img_title = _("Search items");
+						break;
+					case "customer":
+						$link = $path_to_root . "/sales/inquiry/customers_list.php?popup=1&client_id=" . $id;
+						$img_title = _("Search customers");
+						break;
+					case "branch":
+						$link = $path_to_root . "/sales/inquiry/customer_branches_list.php?popup=1&client_id=" . $id . "#customer_id";
+						$img_title = _("Search branches");
+						break;
+					case "supplier":
+						$link = $path_to_root . "/purchasing/inquiry/suppliers_list.php?popup=1&client_id=" . $id;
+						$img_title = _("Search suppliers");
+						break;
+					case "account":
+						$link = $path_to_root . "/gl/inquiry/accounts_list.php?popup=1&client_id=" . $id;
+						$img_title = _("Search GL accounts");
+						break;
+				}
+			}
+		
+			if ($link !=="") {
+				$theme = user_theme();
+				$img = '<img src="'.$path_to_root.'/themes/'.$theme.'/images/'.ICON_VIEW.
+				'" style="vertical-align:middle;width:12px;height:12px;border:0;" onclick="javascript:lookupWindow(&quot;'.
+				$link.'&quot;, &quot;&quot;);" title="' . $img_title . '" style="cursor:pointer;" />';
+			}
 		}
-		return $selector;
+		
+		if ($opts['editlink'])
+			$selector .= ' '.$opts['editlink'];
+		
+		if ($search_box && $opts['cells'])
+			$str = ($edit_entry != '' ? "<td>$edit_entry</td>" : '') . "<td>$selector$img</td>";
+		else
+			$str = $edit_entry . $selector . $img;
+		return $str;
 	}
 
 	/*
-	 * Helper function. Returns true if selector $name is subject to update.
+	 * Helper function. 
+	 * Returns true if selector $name is subject to update.
 	 */
 	function list_updated($name)
 	{
@@ -321,7 +404,6 @@ class ListRendererBootstrap extends \ListRenderer
 		$selector = $first_opt = '';
 		$first_id = false;
 		$found = false;
-		// if($name=='SelectStockFromList') display_error($sql);
 		foreach ($items as $value => $descr) {
 			$sel = '';
 			if (in_array((string) $value, $selected_id, true)) {
@@ -337,7 +419,6 @@ class ListRendererBootstrap extends \ListRenderer
 
 		if ($first_id !== false) {
 			$sel = ($found === $first_id) || ($found === false && ($spec_option === false)) ? "selected='selected'" : '';
-			$selector = sprintf($first_opt, $sel) . $selector;
 		}
 		// Prepend special option.
 		if ($spec_option !== false) { // if special option used - add it
@@ -361,29 +442,25 @@ class ListRendererBootstrap extends \ListRenderer
 		$selector = "<span id='_{$name}_sel'>" . $selector . "</span>\n";
 
 		if ($select_submit != false) { // if submit on change is used - add select button
-			global $_select_button;
-			$selector .= sprintf($_select_button, $disabled, user_theme(), (fallback_mode() ? '' : 'display:none;'), '_' . $name . '_update') . "\n";
+			$selector .= sprintf(SELECT_BUTTON, $disabled, user_theme(), (fallback_mode() ? '' : 'display:none;'), '_' . $name . '_update') . "\n";
 		}
 		default_focus($name);
 
 		return $selector;
 	}
 	// ----------------------------------------------------------------------------------------------
-	function _format_add_curr($row)
+	function array_selector_row($label, $name, $selected_id, $items, $options=null)
 	{
-		static $company_currency;
-
-		if ($company_currency == null) {
-			$company_currency = get_company_currency();
-		}
-		return $row[1] . ($row[2] == $company_currency ? '' : ("&nbsp;-&nbsp;" . $row[2]));
+		View::get()->layoutHintRow();
+		$controlAsString = array_selector($name, $selected_id, $items, $options);
+		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_COMBO, $label, $controlAsString));
 	}
-
+	//----------------------------------------------------------------------------------------------
 	function add_edit_combo($type)
 	{
-		global $path_to_root, $popup_editors, $use_icon_for_editkey;
+		global $path_to_root, $popup_editors, $SysPrefs;
 
-		if (! isset($use_icon_for_editkey) || $use_icon_for_editkey == 0)
+		if (! isset($SysPrefs->use_icon_for_editkey) || $SysPrefs->use_icon_for_editkey == 0)
 			return "";
 			// Derive theme path
 		$theme_path = $path_to_root . '/themes/' . user_theme();
@@ -396,9 +473,11 @@ class ListRendererBootstrap extends \ListRenderer
 
 	function supplier_list($name, $selected_id = null, $spec_option = false, $submit_on_change = false, $all = false, $editkey = false)
 	{
-		global $all_items;
-
-		$sql = "SELECT supplier_id, supp_ref, curr_code, inactive FROM " . TB_PREF . "suppliers ";
+		global $SysPrefs;
+		if (!empty($SysPrefs->prefs['shortname_name_in_list']))
+			$sql = "SELECT supplier_id, supp_ref, supp_name, curr_code, inactive FROM ".TB_PREF."suppliers ";
+		else	
+			$sql = "SELECT supplier_id, supp_ref, curr_code, inactive FROM " . TB_PREF . "suppliers ";
 
 		$mode = get_company_pref('no_supplier_list');
 
@@ -418,14 +497,13 @@ class ListRendererBootstrap extends \ListRenderer
 				"gst_no"
 			),
 			'spec_option' => $spec_option === true ? _("All Suppliers") : $spec_option,
-			'spec_id' => $all_items,
+			'spec_id' => ALL_TEXT,
 			'select_submit' => $submit_on_change,
 			'async' => false,
 			'sel_hint' => $mode ? _('Press Space tab to filter by name fragment') : _('Select supplier'),
-			'show_inactive' => $all
-		));
-		if ($editkey)
-			$ret .= add_edit_combo('supplier');
+			'show_inactive' => $all,
+			'editlink' => $editkey ? add_edit_combo('supplier') : false
+		), "supplier");
 		return $ret;
 	}
 
@@ -445,8 +523,11 @@ class ListRendererBootstrap extends \ListRenderer
 	function customer_list($name, $selected_id = null, $spec_option = false, $submit_on_change = false, $show_inactive = false, $editkey = false)
 	{
 		global $all_items;
-
-		$sql = "SELECT debtor_no, debtor_ref, curr_code, inactive FROM " . TB_PREF . "debtors_master ";
+		global $SysPrefs;
+		if (!empty($SysPrefs->prefs['shortname_name_in_list']))
+			$sql = "SELECT debtor_no, debtor_ref, name, curr_code, inactive FROM ".TB_PREF."debtors_master ";
+		else	
+			$sql = "SELECT debtor_no, debtor_ref, curr_code, inactive FROM " . TB_PREF . "debtors_master ";
 
 		$mode = get_company_pref('no_customer_list');
 
@@ -467,14 +548,13 @@ class ListRendererBootstrap extends \ListRenderer
 				"tax_id"
 			),
 			'spec_option' => $spec_option === true ? _("All Customers") : $spec_option,
-			'spec_id' => $all_items,
+			'spec_id' => ALL_TEXT,
 			'select_submit' => $submit_on_change,
 			'async' => false,
 			'sel_hint' => $mode ? _('Press Space tab to filter by name fragment; F2 - entry new customer') : _('Select customer'),
-			'show_inactive' => $show_inactive
-		));
-		if ($editkey)
-			$ret .= $this->add_edit_combo('customer');
+			'show_inactive' => $show_inactive,
+			'editlink' => $editkey ? add_edit_combo('customer') : false
+		), "customer" );
 		return $ret;
 	}
 
@@ -486,6 +566,7 @@ class ListRendererBootstrap extends \ListRenderer
 
 	function customer_list_row($label, $name, $selected_id = null, $all_option = false, $submit_on_change = false, $show_inactive = false, $editkey = false)
 	{
+		// TODO !!! path_to_root not used
 		global $path_to_root;
 
 		View::get()->layoutHintRow();
@@ -496,8 +577,6 @@ class ListRendererBootstrap extends \ListRenderer
 	// ------------------------------------------------------------------------------------------------
 	function customer_branches_list($customer_id, $name, $selected_id = null, $spec_option = true, $enabled = true, $submit_on_change = false, $editkey = false)
 	{
-		global $all_items;
-
 		$sql = "SELECT branch_code, branch_ref FROM " . TB_PREF . "cust_branch
 		WHERE debtor_no=" . db_escape($customer_id) . " ";
 
@@ -505,7 +584,7 @@ class ListRendererBootstrap extends \ListRenderer
 			set_editor('branch', $name, $editkey);
 
 		$where = $enabled ? array(
-			"disable_trans = 0"
+			"inactive = 0"
 		) : array();
 		$ret = combo_input($name, $selected_id, $sql, 'branch_code', 'branch_ref', array(
 			'where' => $where,
@@ -513,13 +592,11 @@ class ListRendererBootstrap extends \ListRenderer
 				'branch_ref'
 			),
 			'spec_option' => $spec_option === true ? _('All branches') : $spec_option,
-			'spec_id' => $all_items,
+			'spec_id' => ALL_TEXT,
 			'select_submit' => $submit_on_change,
-			'sel_hint' => _('Select customer branch')
-		));
-		if ($editkey) {
-			$ret .= add_edit_combo('branch');
-		}
+			'sel_hint' => _('Select customer branch'),
+			'editlink' => $editkey ? add_edit_combo('branch') : false
+		), "branch" );
 		return $ret;
 	}
 	// ------------------------------------------------------------------------------------------------
@@ -536,35 +613,36 @@ class ListRendererBootstrap extends \ListRenderer
 	}
 
 	// ------------------------------------------------------------------------------------------------
-	function locations_list($name, $selected_id = null, $all_option = false, $submit_on_change = false)
+	function locations_list($name, $selected_id = null, $all_option = false, $submit_on_change = false, $fixed_asset = false)
 	{
-		global $all_items;
+		$sql = "SELECT loc_code, location_name, inactive FROM ".TB_PREF."locations WHERE fixed_asset=".(int)$fixed_asset;
 
-		$sql = "SELECT loc_code, location_name, inactive FROM " . TB_PREF . "locations";
-
-		return combo_input($name, $selected_id, $sql, 'loc_code', 'location_name', array(
+		return combo_input($name, $selected_id, $sql, 'loc_code', 'location_name',
+			array(
 			'spec_option' => $all_option === true ? _("All Locations") : $all_option,
-			'spec_id' => $all_items,
+				'spec_id' => ALL_TEXT,
 			'select_submit' => $submit_on_change
 		));
 	}
 
-	function locations_list_cells($label, $name, $selected_id = null, $all_option = false, $submit_on_change = false)
+	function locations_list_cells($label, $name, $selected_id = null, $all_option = false, $submit_on_change = false, $fixed_asset = false)
 	{
-		$controlAsString = locations_list($name, $selected_id, $all_option, $submit_on_change);
+		$controlAsString = locations_list($name, $selected_id, $all_option, $submit_on_change, $fixed_asset);
 		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_COMBO, $label, $controlAsString));
 	}
 
-	function locations_list_row($label, $name, $selected_id = null, $all_option = false, $submit_on_change = false)
+	function locations_list_row($label, $name, $selected_id = null, $all_option = false, $submit_on_change = false, $fixed_asset = false)
 	{
 		View::get()->layoutHintRow();
-		$this->locations_list_cells($label, $name, $selected_id, $all_option, $submit_on_change);
+		$this->locations_list_cells($label, $name, $selected_id, $all_option, $submit_on_change, $fixed_asset);
 	}
 
 	// -----------------------------------------------------------------------------------------------
-	function currencies_list($name, $selected_id = null, $submit_on_change = false)
+	function currencies_list($name, $selected_id = null, $submit_on_change = false, $exclude_home_curr = false)
 	{
 		$sql = "SELECT curr_abrev, currency, inactive FROM " . TB_PREF . "currencies";
+		if ($exclude_home_curr)
+			$sql .= " WHERE curr_abrev!='".get_company_currency()."'";
 
 		// default to the company currency
 		return combo_input($name, $selected_id, $sql, 'curr_abrev', 'currency', array(
@@ -651,12 +729,16 @@ class ListRendererBootstrap extends \ListRenderer
 	}
 
 	// ---------------------------------------------------------------------------------------------------
-	function stock_items_list($name, $selected_id = null, $all_option = false, $submit_on_change = false, $opts = array(), $editkey = false)
+	function stock_items_list($name, $selected_id = null, $all_option = false, $submit_on_change = false, $opts = array(), $editkey = false, $type = "stock")
 	{
 		global $all_items;
 
 		$sql = "SELECT stock_id, s.description, c.description, s.inactive, s.editable
 			FROM " . TB_PREF . "stock_master s," . TB_PREF . "stock_category c WHERE s.category_id=c.category_id";
+		if (isset($opts['fixed_asset']) && $opts['fixed_asset'])
+			$sql .= " AND mb_flag='F'";
+		else
+			$sql .= " AND mb_flag!='F'";
 
 		if ($editkey)
 			set_editor('item', $name, $editkey);
@@ -664,7 +746,7 @@ class ListRendererBootstrap extends \ListRenderer
 		$ret = combo_input($name, $selected_id, $sql, 'stock_id', 's.description', array_merge(array(
 			'format' => '_format_stock_items',
 			'spec_option' => $all_option === true ? _("All Items") : $all_option,
-			'spec_id' => $all_items,
+			'spec_id' => ALL_TEXT,
 			'search_box' => true,
 			'search' => array(
 				"stock_id",
@@ -678,29 +760,34 @@ class ListRendererBootstrap extends \ListRenderer
 			'order' => array(
 				'c.description',
 				'stock_id'
-			)
-		), $opts));
-		if ($editkey) {
-			if ($opts['cells']) {
-				$ret[1] .= $this->add_edit_combo('item');
-			} else {
-				$ret .= $this->add_edit_combo('item');
-			}
-		}
+			),
+			'editlink' => $editkey ? add_edit_combo('item') : false,
+			'editable' => false,
+			'max' => 255
+		), $opts), 0); // $type); // This use of $type is not consistent with the use in combo_input CP 2017-11
 		return $ret;
 	}
 
 	function _format_stock_items($row)
 	{
-		return (user_show_codes() ? ($row[0] . "&nbsp;-&nbsp;") : "") . $row[1];
+		return parent::_format_stock_items($row);
 	}
 
-	function stock_items_list_cells($label, $name, $selected_id = null, $all_option = false, $submit_on_change = false, $all = false, $editkey = false)
+	function stock_items_list_cells($label, $name, $selected_id = null, $all_option = false, $submit_on_change = false, $all = false, $editkey = false, $opts= array())
 	{
-		$controls = stock_items_list($name, $selected_id, $all_option, $submit_on_change, array(
-			'cells' => true,
-			'show_inactive' => $all
-		), $editkey);
+		if (isset($opts['fixed_asset']) && $opts['fixed_asset'])
+			$editor_item = 'fa_item';
+		else
+			$editor_item = 'item';
+	
+		$controls = stock_items_list(
+			$name, $selected_id, $all_option, $submit_on_change,
+			array_merge(array(
+				'cells' => true,
+				'show_inactive' => $all
+			), $opts),
+			$editkey
+		);
 		View::get()->addComboControls($label, $controls);
 	}
 	/*
@@ -714,7 +801,6 @@ class ListRendererBootstrap extends \ListRenderer
 	//
 	function sales_items_list($name, $selected_id = null, $all_option = false, $submit_on_change = false, $type = '', $opts = array())
 	{
-		global $all_items;
 		// all sales codes
 		$sql = "SELECT i.item_code, i.description, c.description, count(*)>1 as kit,
 			 i.inactive, if(count(*)>1, '0', s.editable) as editable
@@ -724,7 +810,8 @@ class ListRendererBootstrap extends \ListRenderer
 			LEFT JOIN
 			" . TB_PREF . "stock_category c
 			ON i.category_id=c.category_id
-			WHERE i.stock_id=s.stock_id";
+			WHERE i.stock_id=s.stock_id
+			AND mb_flag != 'F'";
 
 		if ($type == 'local') { // exclude foreign codes
 			$sql .= " AND !i.is_foreign";
@@ -737,7 +824,7 @@ class ListRendererBootstrap extends \ListRenderer
 		return $this->combo_input($name, $selected_id, $sql, 'i.item_code', 'c.description', array_merge(array(
 			'format' => '_format_stock_items',
 			'spec_option' => $all_option === true ? _("All Items") : $all_option,
-			'spec_id' => $all_items,
+			'spec_id' => ALL_TEXT,
 			'search_box' => true,
 			'search' => array(
 				"i.item_code",
@@ -754,7 +841,7 @@ class ListRendererBootstrap extends \ListRenderer
 			),
 			'editable' => 30,
 			'max' => 255
-		), $opts));
+		), $opts), 0); //$type == 'kits' ? $type : "stock_sales" // This use of $type is not consistent with the use in combo_input CP 2017-11
 	}
 
 	function sales_items_list_cells($label, $name, $selected_id = null, $all_option = false, $submit_on_change = false, $editkey = false)
@@ -792,7 +879,7 @@ class ListRendererBootstrap extends \ListRenderer
 			'where' => array(
 				"mb_flag= 'M'"
 			)
-		));
+		), false, "stock_manufactured");
 	}
 
 	function stock_manufactured_items_list_cells($label, $name, $selected_id = null, $all_option = false, $submit_on_change = false)
@@ -809,22 +896,27 @@ class ListRendererBootstrap extends \ListRenderer
 	// ------------------------------------------------------------------------------------
 	function stock_component_items_list($name, $parent_stock_id, $selected_id = null, $all_option = false, $submit_on_change = false, $editkey = false)
 	{
+		$parent = db_escape($parent_stock_id);
 		return stock_items_list($name, $selected_id, $all_option, $submit_on_change, array(
 			'where' => array(
-				"stock_id != " . db_escape($parent_stock_id)
-			)
-		), $editkey);
+				"stock_id != $parent"
+			),
+			'parent' => $parent_stock_id
+		), $editkey, "component");
 	}
 
 	function stock_component_items_list_cells($label, $name, $parent_stock_id, $selected_id = null, $all_option = false, $submit_on_change = false, $editkey = false)
 	{
+		if ($label != null)
+			echo "<td>$label</td>\n";
+		$parent = db_escape($parent_stock_id);
 		$controls = stock_items_list($name, $selected_id, $all_option, $submit_on_change, array(
 			'where' => array(
-				"stock_id != " . db_escape($parent_stock_id)
+				"stock_id != '$parent_stock_id'"
 			),
-			'cells' => true
-		), $editkey);
-		View::get()->addComboControls($label, $controls);
+			'cells' => true,
+			'parent'=> $parent_stock_id
+		), $editkey, "component");
 	}
 	// ------------------------------------------------------------------------------------
 	function stock_costable_items_list($name, $selected_id = null, $all_option = false, $submit_on_change = false)
@@ -833,7 +925,7 @@ class ListRendererBootstrap extends \ListRenderer
 			'where' => array(
 				"mb_flag!='D'"
 			)
-		));
+		), false, "stock_costable");
 	}
 
 	function stock_costable_items_list_cells($label, $name, $selected_id = null, $all_option = false, $submit_on_change = false)
@@ -843,8 +935,7 @@ class ListRendererBootstrap extends \ListRenderer
 				"mb_flag!='D'"
 			),
 			'cells' => true
-		));
-		View::get()->addComboControls($label, $controls);
+		), false, "stock_costable");
 	}
 
 	// ------------------------------------------------------------------------------------
@@ -852,10 +943,10 @@ class ListRendererBootstrap extends \ListRenderer
 	{
 		return stock_items_list($name, $selected_id, $all_option, $submit_on_change, array(
 			'where' => array(
-				"mb_flag!= 'M'"
+				"NOT no_purchase"
 			),
 			'show_inactive' => $all
-		), $editkey);
+		), $editkey, "stock_purchased");
 	}
 	//
 	// This helper is used in PO/GRN/PI entry and supports editable descriptions.
@@ -864,19 +955,12 @@ class ListRendererBootstrap extends \ListRenderer
 	{
 		$controls = stock_items_list($name, $selected_id, $all_option, $submit_on_change, array(
 			'where' => array(
-				"mb_flag!= 'M'"
+				"NOT no_purchase"
 			),
 			'editable' => 30,
 			'cells' => true
-		), $editkey);
-		View::get()->addComboControls($label, $controls);
+		), $editkey, "stock_purchased"); // REVIEW: "stock_purchased" not in unstable CP 2016-01 
 	}
-	/*
-	 * function stock_purchasable_items_list_row($label, $name, $selected_id=null, $all_option=false,
-	 * $submit_on_change=false, $editkey=false) { echo "<tr><td class='label'>$label</td>";
-	 * stock_purchasable_items_list_cells(null, $name, $selected_id=null, $all_option, $submit_on_change, $editkey);
-	 * echo "</tr>\n"; }
-	 */
 	// ------------------------------------------------------------------------------------
 	function stock_item_types_list_row($label, $name, $selected_id = null, $enabled = true)
 	{
@@ -902,6 +986,92 @@ class ListRendererBootstrap extends \ListRenderer
 			'disabled' => ! $enabled
 		));
 		View::get()->addComboControls($label, $controls);
+	}
+
+	function stock_purchasable_fa_list_cells($label, $name, $selected_id=null, $all_option=false,
+		$submit_on_change=false, $all=false, $editkey = false, $exclude_items = array())
+	{
+		// TODO !!!
+		// Check if a fixed asset has been bought.
+		$where_opts[] = "stock_id NOT IN
+		( SELECT stock_id FROM ".TB_PREF."stock_moves WHERE type=".ST_SUPPRECEIVE." AND qty!=0 )";
+	
+		// exclude items currently on the order.
+		foreach($exclude_items as $item) {
+			$where_opts[] = "stock_id != ".db_escape($item->stock_id);
+		}
+		$where_opts[] = "mb_flag='F'";
+	
+		echo stock_items_list_cells($label, $name, $selected_id, $all_option, $submit_on_change, $all, $editkey,
+			array('fixed_asset' => true, 'where' => $where_opts));
+	}
+	
+	function stock_disposable_fa_list($name, $selected_id=null,
+		$all_option=false, $submit_on_change=false)
+	{
+		// TODO !!!
+		// Check if a fixed asset has been bought....
+		$where_opts[] = "stock_id IN
+		( SELECT stock_id FROM ".TB_PREF."stock_moves WHERE type=".ST_SUPPRECEIVE." AND qty!=0 )";
+		// ...but has not been disposed or sold already.
+		$where_opts[] = "stock_id NOT IN
+		( SELECT stock_id FROM ".TB_PREF."stock_moves WHERE (type=".ST_CUSTDELIVERY." OR type=".ST_INVADJUST.") AND qty!=0 )";
+	
+		$where_opts[] = "mb_flag='F'";
+	
+		echo stock_items_list($name, $selected_id, $all_option, $submit_on_change,
+			array('fixed_asset' => true, 'where' => $where_opts));
+	}
+	
+	function stock_disposable_fa_list_cells($label, $name, $selected_id=null,
+		$all_option=false, $submit_on_change=false, $exclude_items = array())
+	{
+		// TODO !!!
+		// Check if a fixed asset has been bought....
+		$where_opts[] = "stock_id IN
+		( SELECT stock_id FROM ".TB_PREF."stock_moves WHERE type=".ST_SUPPRECEIVE." AND qty!=0 )";
+		// ...but has not been disposed or sold already.
+		$where_opts[] = "stock_id NOT IN
+		( SELECT stock_id FROM ".TB_PREF."stock_moves WHERE (type=".ST_CUSTDELIVERY." OR type=".ST_INVADJUST.") AND qty!=0 )";
+	
+		$where_opts[] = "mb_flag='F'";
+	
+		foreach($exclude_items as $item) {
+			$where_opts[] = "stock_id != ".db_escape($item->stock_id);
+		}
+	
+		if ($label != null)
+			echo "<td>$label</td>\n";
+			echo stock_items_list($name, $selected_id, $all_option, $submit_on_change,
+				array('fixed_asset' => true, 'cells'=>true, 'where' => $where_opts));
+	}
+	
+	function stock_depreciable_fa_list_cells($label, $name, $selected_id=null,
+		$all_option=false, $submit_on_change=false)
+	{
+		// TODO !!!
+	
+		// Check if a fixed asset has been bought....
+		$where_opts[] = "stock_id IN
+		( SELECT stock_id FROM ".TB_PREF."stock_moves WHERE type=".ST_SUPPRECEIVE." AND qty!=0 )";
+		// ...but has not been disposed or sold already.
+		$where_opts[] = "stock_id NOT IN
+		( SELECT stock_id FROM ".TB_PREF."stock_moves WHERE (type=".ST_CUSTDELIVERY." OR type=".ST_INVADJUST.") AND qty!=0 )";
+	
+		$year = get_current_fiscalyear();
+		$y = date('Y', strtotime($year['end']));
+	
+		// check if current fiscal year
+		$where_opts[] = "depreciation_date < '".$y."-12-01'";
+		$where_opts[] = "depreciation_date >= '".($y-1)."-12-01'";
+	
+		$where_opts[] = "material_cost > 0";
+		$where_opts[] = "mb_flag='F'";
+	
+		if ($label != null)
+			echo "<td>$label</td>\n";
+			echo stock_items_list($name, $selected_id, $all_option, $submit_on_change,
+			 array('fixed_asset' => true, 'where' => $where_opts, 'cells'=>true));
 	}
 
 	// ------------------------------------------------------------------------------------
@@ -956,24 +1126,16 @@ class ListRendererBootstrap extends \ListRenderer
 	}
 
 	// ------------------------------------------------------------------------------------
-	function item_tax_types_list($name, $selected_id = null)
+	function item_tax_types_list_cells($label, $name, $selected_id = null, $show_inactive = false)
 	{
-		$sql = "SELECT id, name FROM " . TB_PREF . "item_tax_types";
-		return combo_input($name, $selected_id, $sql, 'id', 'name', array(
-			'order' => 'id'
-		));
-	}
-
-	function item_tax_types_list_cells($label, $name, $selected_id = null)
-	{
-		$controls = item_tax_types_list($name, $selected_id);
+		$controls = item_tax_types_list($name, $selected_id, $show_inactive);
 		View::get()->addComboControls($label, $controls);
 	}
 
-	function item_tax_types_list_row($label, $name, $selected_id = null)
+	function item_tax_types_list_row($label, $name, $selected_id = null, $show_inactive = false)
 	{
 		View::get()->layoutHintRow();
-		$this->item_tax_types_list_cells($label, $name, $selected_id);
+		$this->item_tax_types_list_cells($label, $name, $selected_id, $show_inactive);
 	}
 
 	// ------------------------------------------------------------------------------------
@@ -1162,7 +1324,6 @@ class ListRendererBootstrap extends \ListRenderer
 			'spec_option' => $special_option === true ? _("All Sales Types") : $special_option,
 			'spec_id' => 0,
 			'select_submit' => $submit_on_change
-		// 'async' => false,
 		));
 	}
 
@@ -1179,25 +1340,7 @@ class ListRendererBootstrap extends \ListRenderer
 	}
 
 	// -----------------------------------------------------------------------------------------------
-	function movement_types_list($name, $selected_id = null)
-	{
-		$sql = "SELECT id, name FROM " . TB_PREF . "movement_types";
-		return combo_input($name, $selected_id, $sql, 'id', 'name', array());
-	}
 
-	function movement_types_list_cells($label, $name, $selected_id = null)
-	{
-		$controls = movement_types_list($name, $selected_id);
-		View::get()->addComboControls($label, $controls);
-	}
-
-	function movement_types_list_row($label, $name, $selected_id = null)
-	{
-		View::get()->layoutHintRow();
-		$this->movement_types_list_cells($label, $name, $selected_id);
-	}
-
-	// -----------------------------------------------------------------------------------------------
 	function _format_date($row)
 	{
 		return sql2date($row['reconciled']);
@@ -1222,19 +1365,21 @@ class ListRendererBootstrap extends \ListRenderer
 		View::get()->addComboControls($label, $controls);
 	}
 	/*
-	 * function bank_reconciliation_list_row($label, $account, $name, $selected_id=null, $submit_on_change=false,
-	 * $special_option=false) { echo "<tr>\n"; bank_reconciliation_list_cells($label, $account, $name, $selected_id,
-	 * $submit_on_change, $special_option); echo "</tr>\n"; }
+	function bank_reconciliation_list_row($label, $account, $name, $selected_id=null, $submit_on_change=false, $special_option=false)
+	{
+		echo "<tr>\n";
+		bank_reconciliation_list_cells($label, $account, $name, $selected_id, $submit_on_change, $special_option);
+		echo "</tr>\n";
+	}
 	 */
 	// -----------------------------------------------------------------------------------------------
 	function workcenter_list($name, $selected_id = null, $all_option = false)
 	{
-		global $all_items;
-
 		$sql = "SELECT id, name, inactive FROM " . TB_PREF . "workcentres";
+
 		return combo_input($name, $selected_id, $sql, 'id', 'name', array(
 			'spec_option' => $all_option === true ? _("All Suppliers") : $all_option,
-			'spec_id' => $all_items
+			'spec_id' => ALL_TEXT
 		));
 	}
 
@@ -1279,11 +1424,12 @@ class ListRendererBootstrap extends \ListRenderer
 	function cash_accounts_list_row($label, $name, $selected_id = null, $submit_on_change = false)
 	{
 		View::get()->layoutHintRow();
-		$sql = "SELECT " . TB_PREF . "bank_accounts.id, bank_account_name, bank_curr_code, inactive
-		FROM " . TB_PREF . "bank_accounts
-		WHERE " . TB_PREF . "bank_accounts.account_type=" . BT_CASH;
+		$sql = "SELECT id, bank_account_name, bank_curr_code, inactive
+			FROM " . TB_PREF . "bank_accounts
+			WHERE account_type=".BT_CASH;
 
 		$controls = combo_input($name, $selected_id, $sql, 'id', 'bank_account_name', array(
+			'spec_option' => $all_option,
 			'format' => '_format_add_curr',
 			'select_submit' => $submit_on_change,
 			'async' => true
@@ -1312,14 +1458,16 @@ class ListRendererBootstrap extends \ListRenderer
 	// -----------------------------------------------------------------------------------------------
 	// Payment type selector for current user.
 	//
-	function sale_payment_list($name, $category, $selected_id = null, $submit_on_change = true)
+	function sale_payment_list($name, $category, $selected_id = null, $submit_on_change = true, $prepayments = true)
 	{
 		$sql = "SELECT terms_indicator, terms, inactive FROM " . TB_PREF . "payment_terms";
 
 		if ($category == PM_CASH) // only cash
 			$sql .= " WHERE days_before_due=0 AND day_in_following_month=0";
-		if ($category == PM_CREDIT) // only delayed payments
-			$sql .= " WHERE days_before_due!=0 OR day_in_following_month!=0";
+		elseif ($category == PM_CREDIT) // only delayed payments
+			$sql .= " WHERE days_before_due".($prepayments ? '!=': '>')."0 OR day_in_following_month!=0";
+		elseif (!$prepayments)
+			$sql .= " WHERE days_before_due>=0";
 
 		return combo_input($name, $selected_id, $sql, 'terms_indicator', 'terms', array(
 			'select_submit' => $submit_on_change,
@@ -1327,9 +1475,9 @@ class ListRendererBootstrap extends \ListRenderer
 		));
 	}
 
-	function sale_payment_list_cells($label, $name, $category, $selected_id = null, $submit_on_change = true)
+	function sale_payment_list_cells($label, $name, $category, $selected_id = null, $submit_on_change = true, $prepayments = true)
 	{
-		$controls = sale_payment_list($name, $category, $selected_id, $submit_on_change);
+		$controls = sale_payment_list($name, $category, $selected_id, $submit_on_change, $prepayments);
 		View::get()->addComboControls($label, $controls);
 	}
 	// -----------------------------------------------------------------------------------------------
@@ -1356,21 +1504,29 @@ class ListRendererBootstrap extends \ListRenderer
 	}
 
 	// -----------------------------------------------------------------------------------------------
-	function stock_categories_list($name, $selected_id = null, $spec_opt = false, $submit_on_change = false)
+	function stock_categories_list($name, $selected_id=null, $spec_opt=false, $submit_on_change=false, $fixed_asset = false)
 	{
+		$where_opts = array();
+		if ($fixed_asset)
+			$where_opts[0] = "dflt_mb_flag='F'";
+		else
+			$where_opts[0] = "dflt_mb_flag!='F'";
+	
 		$sql = "SELECT category_id, description, inactive FROM " . TB_PREF . "stock_category";
 		return combo_input($name, $selected_id, $sql, 'category_id', 'description', array(
 			'order' => 'category_id',
 			'spec_option' => $spec_opt,
 			'spec_id' => - 1,
 			'select_submit' => $submit_on_change,
-			'async' => true
-		));
+	 			'async' => true,
+				'where' => $where_opts,
+	 		)
+		);
 	}
 
-	function stock_categories_list_cells($label, $name, $selected_id = null, $spec_opt = false, $submit_on_change = false)
+	function stock_categories_list_cells($label, $name, $selected_id = null, $spec_opt = false, $submit_on_change = false, $fixed_asset = false)
 	{
-		$controls = stock_categories_list($name, $selected_id, $spec_opt, $submit_on_change);
+		$controls = stock_categories_list($name, $selected_id, $spec_opt, $submit_on_change, $fixed_asset);
 		View::get()->addComboControls($label, $controls);
 	}
 
@@ -1381,10 +1537,39 @@ class ListRendererBootstrap extends \ListRenderer
 	}
 
 	// -----------------------------------------------------------------------------------------------
+	function fixed_asset_classes_list($name, $selected_id=null, $spec_opt=false, $submit_on_change=false)
+	{
+		$sql = "SELECT c.fa_class_id, CONCAT(c.fa_class_id,' - ',c.description) `desc`, CONCAT(p.fa_class_id,' - ',p.description) `class`, c.inactive FROM "
+			.TB_PREF."stock_fa_class c LEFT JOIN ".TB_PREF."stock_fa_class p ON c.parent_id=p.fa_class_id";
+	
+		return combo_input($name, $selected_id, $sql, 'c.fa_class_id', 'desc',
+			array('order'=>'c.fa_class_id',
+				'spec_option' => $spec_opt,
+				'spec_id' => '-1',
+				'select_submit'=> $submit_on_change,
+				'async' => true,
+				'search_box' => true,
+				'search' => array("c.fa_class_id"),
+				'search_submit' => false,
+				'spec_id' => '',
+				'size' => 3,
+				'max' => 3,
+				'category' => 'class',
+			));
+	}
+	
+	function fixed_asset_classes_list_row($label, $name, $selected_id=null, $spec_opt=false, $submit_on_change=false)
+	{
+		// TODO !!!
+		echo "<tr><td class='label'>$label</td>";
+		echo "<td>";
+		echo fixed_asset_classes_list($name, $selected_id, $spec_opt, $submit_on_change);
+		echo "</td></tr>\n";
+	}
+
+	// -----------------------------------------------------------------------------------------------
 	function gl_account_types_list($name, $selected_id = null, $all_option = false, $all = true)
 	{
-		global $all_items;
-
 		$sql = "SELECT id, name FROM " . TB_PREF . "chart_types";
 
 		return combo_input($name, $selected_id, $sql, 'id', 'name', array(
@@ -1395,7 +1580,7 @@ class ListRendererBootstrap extends \ListRenderer
 				'parent'
 			),
 			'spec_option' => $all_option,
-			'spec_id' => $all_items
+			'spec_id' => ALL_TEXT
 		));
 	}
 
@@ -1443,7 +1628,7 @@ class ListRendererBootstrap extends \ListRenderer
 			'async' => false,
 			'category' => 2,
 			'show_inactive' => $all
-		));
+		), "account" );
 	}
 
 	function _format_account($row)
@@ -1580,37 +1765,37 @@ class ListRendererBootstrap extends \ListRenderer
 	// ------------------------------------------------------------------------------------------------
 	function dateformats_list_row($label, $name, $value = null)
 	{
-		global $dateformats;
+		global $SysPrefs;
 
 		View::get()->layoutHintRow();
-		$controlAsString = array_selector($name, $value, $dateformats);
+		$controlAsString = array_selector($name, $value, $SysPrefs->dateformats);
 		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_ARRAY, $label, $controlAsString));
 	}
 
 	function dateseps_list_row($label, $name, $value = null)
 	{
-		global $dateseps;
+		global $SysPrefs;
 
 		View::get()->layoutHintRow();
-		$controlAsString = array_selector($name, $value, $dateseps);
+		$controlAsString = array_selector($name, $value, $SysPrefs->dateseps);
 		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_ARRAY, $label, $controlAsString));
 	}
 
 	function thoseps_list_row($label, $name, $value = null)
 	{
-		global $thoseps;
+		global $SysPrefs;
 
 		View::get()->layoutHintRow();
-		$controls = array_selector($name, $value, $thoseps);
+		$controls = array_selector($name, $value, $SysPrefs->thoseps);
 		View::get()->addComboControls($label, $controls);
 	}
 
 	function decseps_list_row($label, $name, $value = null)
 	{
-		global $decseps;
+		global $SysPrefs;
 
 		View::get()->layoutHintRow();
-		$controls = array_selector($name, $value, $decseps);
+		$controls = array_selector($name, $value, $SysPrefs->decseps);
 		View::get()->addComboControls($label, $controls);
 	}
 
@@ -1636,11 +1821,11 @@ class ListRendererBootstrap extends \ListRenderer
 
 	function pagesizes_list_row($label, $name, $value = null)
 	{
-		global $pagesizes;
+		global $SysPrefs;
 
 		// TODO Move the non view logic elsewhere CP 2014-11
 		$items = array();
-		foreach ($pagesizes as $pz)
+		foreach ($SysPrefs->pagesizes as $pz)
 			$items[$pz] = $pz;
 
 		View::get()->layoutHintRow();
@@ -1699,28 +1884,26 @@ class ListRendererBootstrap extends \ListRenderer
 		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_ARRAY, $label, $controlAsString));
 	}
 
-	function cust_allocations_list_cells($label, $name, $selected = null)
+	function cust_allocations_list_cells($label, $name, $selected = null, $submit_on_change = false)
 	{
-		global $all_items;
 
 		$allocs = array(
-			$all_items => _("All Types"),
+			ALL_TEXT => _("All Types"),
 			'1' => _("Sales Invoices"),
-			'2' => _("Overdue Invoices"),
+			'2' => _("Unsettled transactions"),
 			'3' => _("Payments"),
 			'4' => _("Credit Notes"),
 			'5' => _("Delivery Notes")
 		);
-		$controlAsString = array_selector($name, $selected, $allocs);
+		$controlAsString = array_selector($name, $selected, $allocs, array('select_submit'=> $submit_on_change));
 		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_ARRAY, $label, $controlAsString));
 	}
 
 	function supp_allocations_list_cell($name, $selected = null)
 	{
-		global $all_items;
 
 		$allocs = array(
-			$all_items => _("All Types"),
+			ALL_TEXT => _("All Types"),
 			'1' => _("Invoices"),
 			'2' => _("Overdue Invoices"),
 			'3' => _("Payments"),
@@ -1731,21 +1914,19 @@ class ListRendererBootstrap extends \ListRenderer
 		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_ARRAY, $label, $controlAsString));
 	}
 
-	function supp_transactions_list_cell($name, $selected = null)
+	function supp_transactions_list_cell($name, $selected = null, $submit_on_change = false)
 	{
-		global $all_items;
-
 		$allocs = array(
-			$all_items => _("All Types"),
+			ALL_TEXT => _("All Types"),
 			'6' => _("GRNs"),
 			'1' => _("Invoices"),
-			'2' => _("Overdue Invoices"),
+			'2' => _("Unsettled transactions"),
 			'3' => _("Payments"),
 			'4' => _("Credit Notes"),
 			'5' => _("Overdue Credit Notes")
 		);
 
-		$controlAsString = array_selector($name, $selected, $allocs);
+		$controlAsString = array_selector($name, $selected, $allocs, array('select_submit'=> $submit_on_change));
 		View::get()->addControl(View::controlFromRenderedString(View::CONTROL_ARRAY, $label, $controlAsString));
 	}
 
@@ -1911,8 +2092,6 @@ class ListRendererBootstrap extends \ListRenderer
 	// ------------------------------------------------------------------------------------------------
 	function security_roles_list($name, $selected_id = null, $new_item = false, $submit_on_change = false, $show_inactive = false)
 	{
-		global $all_items;
-
 		$sql = "SELECT id, role, inactive FROM " . TB_PREF . "security_roles";
 
 		return combo_input($name, $selected_id, $sql, 'id', 'description', array(
@@ -2088,6 +2267,164 @@ class ListRendererBootstrap extends \ListRenderer
 			'spec_id' => ''
 		));
 	}
+	
+	function tax_algorithm_list($name, $value=null, $submit_on_change = false)
+	{
+		// TODO !!!
+		global $tax_algorithms;
+	
+		return array_selector($name, $value, $tax_algorithms,
+			array(
+				'select_submit'=> $submit_on_change,
+				'async' => true,
+			)
+			);
+	}
+	
+	function tax_algorithm_list_cells($label, $name, $value=null, $submit_on_change=false)
+	{
+		// TODO !!!
+			echo "<td>$label</td>\n";
+			echo "<td>";
+			echo tax_algorithm_list($name, $value, $submit_on_change);
+			echo "</td>\n";
+	}
+	
+	function tax_algorithm_list_row($label, $name, $value=null, $submit_on_change=false)
+	{
+		// TODO !!!
+		tax_algorithm_list_cells(null, $name, $value, $submit_on_change);
+		echo "</tr>\n";
+	}
+	
+	function refline_list($name, $type, $value=null, $spec_option=false)
+	{
+		// TODO !!!
+	
+		$where = array();
+	
+		if (isset($type))
+			$where = array('`trans_type`='.db_escape($type));
+	
+			return combo_input($name, $value, $sql, 'id', 'prefix',
+				array(
+					'order'=>array('prefix'),
+					'spec_option' => $spec_option,
+					'spec_id' => '',
+					'type' => 2,
+					'where' => $where,
+					'select_submit' => true,
+				)
+				);
+	}
+	
+	function refline_list_row($label, $name, $type, $selected_id=null, $spec_option=false)
+	{
+		// TODO !!!
+		if ($label != null)
+			echo "<td class='label'>$label</td>\n";
+			echo "<td>";
+	
+			echo refline_list($name, $type, $selected_id, $spec_option);
+			echo "</td></tr>\n";
+	}
+	
+	
+	//----------------------------------------------------------------------------------------------
+	
+	function subledger_list($name, $account, $selected_id=null)
+	{
+		// TODO !!!
+		$type = is_subledger_account($account);
+		if (!$type)
+			return '';
+	
+		if($type > 0)
+			$sql = "SELECT DISTINCT d.debtor_no as id, debtor_ref as name
+					FROM "
+					.TB_PREF."debtors_master d,"
+					.TB_PREF."cust_branch c
+					WHERE d.debtor_no=c.debtor_no AND c.receivables_account=".db_escape($account);
+		else
+			$sql = "SELECT supplier_id as id, supp_ref as name
+					FROM "
+					.TB_PREF."suppliers s
+					WHERE s.payable_account=".db_escape($account);
+
+		$mode = get_company_pref('no_customer_list');
+
+		return combo_input($name, $selected_id, $sql, 'id', 'name',
+			array(
+				'type' => 1,
+				'size' => 20,
+				'async' => false,
+			));
+	}
+	
+	function subledger_list_cells($label, $name, $account, $selected_id=null)
+	{
+		// TODO !!!
+			echo "<td>$label</td>\n";
+			echo "<td nowrap>";
+			echo subledger_list($name, $account, $selected_id);
+			echo "</td>\n";
+	}
+	
+	function subledger_list_row($label, $name, $selected_id=null, $all_option = false,
+		$submit_on_change=false, $show_inactive=false, $editkey = false)
+	{
+		// TODO !!!
+		echo subledger_list($name, $account, $selected_id);
+		echo "</td>\n</tr>\n";
+	}
+	
+	function accounts_type_list_row($label, $name, $selected_id=null)
+	{
+		// TODO !!!
+		if ($label != null)
+			echo "<td class='label'>$label</td>\n";
+		echo "<td>";
+		$sel = array(_("Numeric"), _("Alpha Numeric"), _("ALPHA NUMERIC"));
+		echo array_selector($name, $selected_id, $sel);
+		echo "</td></tr>\n";
+	}
+	
+	function users_list_cells($label, $name, $selected_id=null, $submit_on_change=false, $spec_opt=true)
+	{
+		// TODO !!!
+		$sql = " SELECT user_id, real_name FROM ".TB_PREF."users";
+	
+		if ($label != null)
+			echo "<td>$label</td>\n";
+		echo "<td>";
+	
+		echo combo_input($name, $selected_id, $sql, 'user_id', 'real_name',
+			array(
+				'spec_option' => $spec_opt===true ?_("All users") : $spec_opt,
+				'spec_id' => '',
+				'order' => 'real_name',
+				'select_submit'=> $submit_on_change,
+				'async' => false
+			) );
+		echo "</td>";
+	
+	}
+	
+	function collations_list_row($label, $name, $selected_id=null)
+	{
+		// TODO !!!
+	
+		echo "<tr>";
+		if ($label != null)
+			echo "<td class='label'>$label</td>\n";
+		echo "<td>";
+	
+		echo array_selector($name, $selected_id, $supported_collations,
+			array('select_submit'=> false) );
+		echo "</td></tr>\n";
+	}
+	
+	
 }
 
 ?>

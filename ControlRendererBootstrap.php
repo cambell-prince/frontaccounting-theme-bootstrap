@@ -473,8 +473,14 @@ class ControlRendererBootstrap extends \ControlRenderer
 		}
 
 		$cc = 0; // row colour counter
-		foreach ($pager->data as $line_no => $row) {
-
+		$data = [];
+		// Support for the new PagerInterface whilst maintaining compatibility upstream.
+		if (is_a($pager, 'SGW\common\Pager\PagerInterface')) {
+			$data = $pager->generator();
+		} else {
+			$data = $pager->data;
+		}
+		foreach ($data as $line_no => $row) {
 			$marker = $pager->marker;
 			if ($marker && $marker($row))
 				start_row("class='$pager->marker_class'");
@@ -482,13 +488,25 @@ class ControlRendererBootstrap extends \ControlRenderer
 				alt_table_row_color($cc);
 			foreach ($pager->columns as $k => $col) {
 				$coltype = $col['type'];
-				$cell = isset($col['name']) ? $row[$col['name']] : '';
+				$cell = '';
+				if (isset($col['name'])) {
+					$property = $col['name'];
+					if (is_object($row)) {
+						if (property_exists($row, $property)) {
+							$cell = $row->$property;
+						}
+					} else {
+						$cell = $row[$property];
+					}
+				}
 
 				if (isset($col['fun'])) { // use data input function if defined
 					$fun = $col['fun'];
-					if (method_exists($pager, $fun)) {
+					if (is_string($fun) && method_exists($pager, $fun)) {
 						$cell = $pager->$fun($row, $cell);
-					} elseif (function_exists($fun)) {
+					} elseif (is_string($fun) && function_exists($fun)) {
+						$cell = $fun($row, $cell);
+					} elseif (is_callable($fun)) {
 						$cell = $fun($row, $cell);
 					} else
 						$cell = '';
